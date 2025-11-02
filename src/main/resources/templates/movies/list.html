@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Фильмы', ~{::section}, ~{::scripts})}">
+<section>
+    <h1>Фильмы</h1>
+
+    <form th:action="@{/movies}" method="get" class="filters" th:object="${filter}">
+        <div class="filters-row">
+            <label>
+                Название
+                <input type="text" th:field="*{name}">
+            </label>
+            <label>
+                Режиссёр
+                <input type="text" th:field="*{directorName}">
+            </label>
+            <label>
+                Сценарист
+                <input type="text" th:field="*{screenwriterName}">
+            </label>
+            <label>
+                Оператор
+                <input type="text" th:field="*{operatorName}">
+            </label>
+            <label>
+                Жанр
+                <select th:field="*{genre}">
+                    <option value="">--</option>
+                    <option th:each="genre : ${genres}"
+                            th:value="${genre}"
+                            th:text="${genre}"></option>
+                </select>
+            </label>
+            <label>
+                MPAA
+                <select th:field="*{mpaaRating}">
+                    <option value="">--</option>
+                    <option th:each="rating : ${mpaaRatings}"
+                            th:value="${rating}"
+                            th:text="${rating}"></option>
+                </select>
+            </label>
+        </div>
+        <div class="filters-row">
+            <label>
+                Сортировать по
+                <select th:field="*{sortBy}">
+                    <option value="">--</option>
+                    <option th:each="option : ${sortOptions}"
+                            th:value="${option.key}"
+                            th:text="${option.value}"></option>
+                </select>
+            </label>
+            <label>
+                Порядок
+                <select th:field="*{sortDirection}">
+                    <option value="">--</option>
+                    <option value="asc" th:selected="${filter.sortDirection == 'asc'}">По возрастанию</option>
+                    <option value="desc" th:selected="${filter.sortDirection == 'desc'}">По убыванию</option>
+                </select>
+            </label>
+        </div>
+        <div class="filters-actions">
+            <button type="submit" name="action" value="filter">Применить фильтр</button>
+            <button type="submit" name="action" value="sort">Применить сортировку</button>
+        </div>
+    </form>
+
+    <div class="actions">
+        <button type="button" id="createMovieBtn">Добавить фильм</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Название</th>
+            <th>X</th>
+            <th>Y</th>
+            <th>Создан</th>
+            <th>Бюджет</th>
+            <th>Сборы</th>
+            <th>Жанр</th>
+            <th>MPAA</th>
+            <th>Режиссёр</th>
+            <th>Сценарист</th>
+            <th>Оператор</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${page.isEmpty()}">
+            <td colspan="12">Нет данных</td>
+        </tr>
+        <tr th:each="movie : ${page.content}"
+            th:data-id="${movie.id}">
+
+            <td th:text="${movie.name}"></td>
+            <td th:text="${movie.coordX}"></td>
+            <td th:text="${movie.coordY}"></td>
+
+            <td th:text="${movie.creationDate != null ? #dates.format(movie.creationDate, 'dd.MM.yyyy HH:mm') : ''}"></td>
+
+            <td th:text="${movie.budget}"></td>
+            <td th:text="${movie.totalBoxOffice}"></td>
+            <td th:text="${movie.genre}"></td>
+            <td th:text="${movie.mpaaRating}"></td>
+            <td th:text="${movie.directorName}"></td>
+            <td th:text="${movie.screenwriterName}"></td>
+            <td th:text="${movie.operatorName}"></td>
+            <td class="actions">
+                <button type="button" class="detailsMovieBtn" th:data-id="${movie.id}">Подробнее</button>
+                <button type="button" class="editMovieBtn" th:data-id="${movie.id}">Изменить</button>
+                <button type="button" class="deleteMovieBtn" th:data-id="${movie.id}">Удалить</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="pagination" th:if="${page.totalPages > 1}">
+        <button type="button" th:data-page="${page.number - 1}"
+                th:disabled="${page.first}">Назад</button>
+        <span>Страница <span th:text="${page.number + 1}"></span> из
+            <span th:text="${page.totalPages}"></span></span>
+        <button type="button" th:data-page="${page.number + 1}"
+                th:disabled="${page.last}">Вперёд</button>
+    </div>
+
+    <dialog id="movieDialog">
+        <form id="movieForm" novalidate>
+            <h2 id="movieDialogTitle">Фильм</h2>
+            <input type="hidden" name="id" id="movieId">
+            <div class="form-grid">
+                <label>
+                    Название *
+                    <input type="text" name="name" id="movieName" required>
+                </label>
+                <label>
+                    Координата X *
+                    <input type="number" name="coordX" id="movieCoordX" step="0.01" required>
+                </label>
+                <label>
+                    Координата Y *
+                    <input type="number" name="coordY" id="movieCoordY" step="1" required>
+                </label>
+                <label>
+                    Оскары
+                    <input type="number" name="oscarsCount" id="movieOscarsCount" min="1">
+                </label>
+                <label>
+                    Бюджет *
+                    <input type="number" name="budget" id="movieBudget" min="1" required>
+                </label>
+                <label>
+                    Сборы *
+                    <input type="number" name="totalBoxOffice" id="movieTotalBoxOffice" step="0.01" min="0.01" required>
+                </label>
+                <label>
+                    MPAA
+                    <select name="mpaaRating" id="movieMpaaRating">
+                        <option value="">--</option>
+                    </select>
+                </label>
+                <label>
+                    Режиссёр
+                    <select name="directorId" id="movieDirectorId">
+                        <option value="">--</option>
+                    </select>
+                </label>
+                <label>
+                    Сценарист *
+                    <select name="screenwriterId" id="movieScreenwriterId" required>
+                        <option value="">--</option>
+                    </select>
+                </label>
+                <label>
+                    Оператор
+                    <select name="operatorId" id="movieOperatorId">
+                        <option value="">--</option>
+                    </select>
+                </label>
+                <label>
+                    Длина
+                    <input type="number" name="length" id="movieLength" min="1">
+                </label>
+                <label>
+                    Золотые пальмы *
+                    <input type="number" name="goldenPalmCount" id="movieGoldenPalmCount" min="1" required>
+                </label>
+                <label>
+                    Жанр *
+                    <select name="genre" id="movieGenre" required>
+                        <option value="">--</option>
+                    </select>
+                </label>
+            </div>
+            <div class="form-errors" id="movieFormErrors" hidden></div>
+            <div class="form-actions">
+                <button type="button" id="movieDialogCancel">Отмена</button>
+                <button type="submit" id="movieDialogSubmit">Сохранить</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="movieDetailsDialog">
+        <div class="details-content">
+            <h2 id="movieDetailsTitle">Информация о фильме</h2>
+            <div class="details-grid">
+                <section>
+                    <h3>Основные данные</h3>
+                    <dl>
+                        <dt>Название</dt>
+                        <dd id="detailsName"></dd>
+                        <dt>Дата создания</dt>
+                        <dd id="detailsCreationDate"></dd>
+                        <dt>Жанр</dt>
+                        <dd id="detailsGenre"></dd>
+                        <dt>MPAA</dt>
+                        <dd id="detailsMpaa"></dd>
+                        <dt>Бюджет</dt>
+                        <dd id="detailsBudget"></dd>
+                        <dt>Сборы</dt>
+                        <dd id="detailsBoxOffice"></dd>
+                        <dt>Оскары</dt>
+                        <dd id="detailsOscars"></dd>
+                        <dt>Золотые пальмы</dt>
+                        <dd id="detailsPalms"></dd>
+                        <dt>Длина</dt>
+                        <dd id="detailsLength"></dd>
+                    </dl>
+                </section>
+                <section>
+                    <h3>Координаты</h3>
+                    <dl>
+                        <dt>X</dt>
+                        <dd id="detailsCoordX"></dd>
+                        <dt>Y</dt>
+                        <dd id="detailsCoordY"></dd>
+                    </dl>
+                </section>
+                <section>
+                    <h3>Команда</h3>
+                    <div id="detailsPersons"></div>
+                </section>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="movieDetailsClose">Закрыть</button>
+            </div>
+        </div>
+    </dialog>
+</section>
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        window.MovieConfig = {
+            genres: /*[[${genres}]]*/ [],
+            mpaaRatings: /*[[${mpaaRatings}]]*/ [],
+            persons: /*[[${persons}]]*/ []
+        };
+    /*]]>*/
+    </script>
+    <script th:src="@{/js/movies.js?v=7}" defer></script>
+</th:block>
+</html>

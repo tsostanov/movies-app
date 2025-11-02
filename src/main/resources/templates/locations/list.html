@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Локации', ~{::section}, ~{::scripts})}">
+<section>
+    <h1>Локации</h1>
+
+    <div class="actions">
+        <button type="button" id="createLocationBtn">Добавить локацию</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Название</th>
+            <th>X</th>
+            <th>Y</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${items.isEmpty()}">
+            <td colspan="3">Нет данных</td>
+        </tr>
+        <tr th:each="location : ${items}">
+            <td th:text="${location.name}"></td>
+            <td th:text="${location.x}"></td>
+            <td th:text="${location.y}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <dialog id="locationDialog">
+        <form id="locationForm" novalidate>
+            <h2>Новая локация</h2>
+            <div class="form-grid">
+                <label>
+                    Название *
+                    <input type="text" name="name" id="locationName" required>
+                </label>
+                <label>
+                    X *
+                    <input type="number" name="x" id="locationX" step="0.01" required>
+                </label>
+                <label>
+                    Y *
+                    <input type="number" name="y" id="locationY" step="0.01" required>
+                </label>
+            </div>
+            <div class="form-errors" id="locationFormErrors" hidden></div>
+            <div class="form-actions">
+                <button type="button" id="locationDialogCancel">Отмена</button>
+                <button type="submit" id="locationDialogSubmit">Сохранить</button>
+            </div>
+        </form>
+    </dialog>
+</section>
+<th:block th:fragment="scripts">
+    <script th:src="@{/js/locations.js}" defer></script>
+</th:block>
+</html>

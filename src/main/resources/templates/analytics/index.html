@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Аналитика', ~{::section}, ~{::scripts})}">
+<section class="analytics">
+    <h1>Аналитика фильмов</h1>
+
+    <article class="analytics-card">
+        <h2>Сколько фильмов с жанром выше выбранного?</h2>
+        <form id="genreCountForm" class="analytics-form">
+            <label>
+                Жанр
+                <select name="genre" id="genreCountSelect" required>
+                    <option value="">--</option>
+                    <option th:each="genre : ${genres}"
+                            th:value="${genre}"
+                            th:text="${genre}"></option>
+                </select>
+            </label>
+            <button type="submit">Посчитать</button>
+        </form>
+        <div class="analytics-result" id="genreCountResult"></div>
+    </article>
+
+    <article class="analytics-card">
+        <h2>Фильмы, название которых содержит подстроку</h2>
+        <form id="nameSearchForm" class="analytics-form">
+            <label>
+                Подстрока
+                <input type="text" name="substring" id="nameSearchInput" placeholder="Например, Star" required>
+            </label>
+            <button type="submit">Найти</button>
+        </form>
+        <div class="analytics-result" id="nameSearchResult"></div>
+    </article>
+
+    <article class="analytics-card">
+        <h2>Фильмы с жанром выше выбранного</h2>
+        <form id="genreListForm" class="analytics-form">
+            <label>
+                Жанр
+                <select name="genre" id="genreListSelect" required>
+                    <option value="">--</option>
+                    <option th:each="genre : ${genres}"
+                            th:value="${genre}"
+                            th:text="${genre}"></option>
+                </select>
+            </label>
+            <button type="submit">Показать</button>
+        </form>
+        <div class="analytics-result" id="genreListResult"></div>
+    </article>
+
+    <article class="analytics-card">
+        <h2>Фильмы без «Оскара»</h2>
+        <button type="button" id="noOscarsBtn">Показать список</button>
+        <div class="analytics-result" id="noOscarsResult"></div>
+    </article>
+
+    <article class="analytics-card">
+        <h2>Сценаристы, у которых нет фильмов с «Оскаром»</h2>
+        <button type="button" id="screenwritersBtn">Показать список</button>
+        <div class="analytics-result" id="screenwritersResult"></div>
+    </article>
+</section>
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        window.MovieAnalyticsConfig = {
+            genres: [[${genres}]]
+        };
+    /*]]>*/
+    </script>
+    <script th:src="@{/js/analytics.js}" defer></script>
+</th:block>
+</html>

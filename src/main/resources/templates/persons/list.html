@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout('Персоны', ~{::section}, ~{::scripts})}">
+<section>
+    <h1>Персоны</h1>
+
+    <div class="actions">
+        <button type="button" id="createPersonBtn">Добавить персона</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Имя</th>
+            <th>Вес</th>
+            <th>Гражданство</th>
+            <th>Цвет глаз</th>
+            <th>Цвет волос</th>
+            <th>Локация</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:if="${items.isEmpty()}">
+            <td colspan="7">Нет данных</td>
+        </tr>
+        <tr th:each="person : ${items}">
+            <td th:text="${person.name}"></td>
+            <td th:text="${person.weight}"></td>
+            <td th:text="${person.nationality}"></td>
+            <td th:text="${person.eyeColor} ?: '—'"></td>
+            <td th:text="${person.hairColor} ?: '—'"></td>
+            <td th:text="${person.location != null ? person.location.name : '—'}"></td>
+            <td class="actions">
+                <button type="button" class="detailsPersonBtn" th:data-id="${person.id}">Подробнее</button>
+                <button type="button" class="editPersonBtn" th:data-id="${person.id}">Изменить</button>
+                <button type="button" class="deletePersonBtn" th:data-id="${person.id}">Удалить</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <dialog id="personDialog">
+        <form id="personForm" novalidate>
+            <h2>Персона</h2>
+            <input type="hidden" name="id" id="personId">
+            <div class="form-grid">
+                <label>
+                    Имя *
+                    <input type="text" name="name" id="personName" required>
+                </label>
+                <label>
+                    Вес (кг) *
+                    <input type="number" name="weight" id="personWeight" min="0.01" step="0.01" required>
+                </label>
+                <label>
+                    Гражданство *
+                    <select name="nationality" id="personNationality" required>
+                        <option value="">--</option>
+                        <option th:each="country : ${countries}"
+                                th:value="${country}"
+                                th:text="${country}"></option>
+                    </select>
+                </label>
+                <label>
+                    Цвет глаз
+                    <select name="eyeColor" id="personEyeColor">
+                        <option value="">--</option>
+                        <option th:each="color : ${colors}"
+                                th:value="${color}"
+                                th:text="${color}"></option>
+                    </select>
+                </label>
+                <label>
+                    Цвет волос
+                    <select name="hairColor" id="personHairColor">
+                        <option value="">--</option>
+                        <option th:each="color : ${colors}"
+                                th:value="${color}"
+                                th:text="${color}"></option>
+                    </select>
+                </label>
+                <label>
+                    Локация
+                    <select name="locationId" id="personLocationId">
+                        <option value="">--</option>
+                        <option th:each="loc : ${locations}"
+                                th:value="${loc.id}"
+                                th:text="${loc.name}"></option>
+                    </select>
+                </label>
+            </div>
+            <div class="form-errors" id="personFormErrors" hidden></div>
+            <div class="form-actions">
+                <button type="button" id="personDialogCancel">Отмена</button>
+                <button type="submit" id="personDialogSubmit">Сохранить</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="personDeleteDialog">
+        <form id="personDeleteForm" novalidate>
+            <h2>Удаление персона</h2>
+            <p id="personDeleteSummary">Выберите замену для связанных фильмов.</p>
+            <input type="hidden" id="personDeleteId">
+            <div class="form-grid">
+                <label>
+                    Режиссёр
+                    <select id="replaceDirector">
+                        <option value="">--</option>
+                        <option th:each="person : ${persons}"
+                                th:value="${person.id}"
+                                th:text="${person.name}"></option>
+                    </select>
+                </label>
+                <label>
+                    Сценарист
+                    <select id="replaceScreenwriter">
+                        <option value="">--</option>
+                        <option th:each="person : ${persons}"
+                                th:value="${person.id}"
+                                th:text="${person.name}"></option>
+                    </select>
+                </label>
+                <label>
+                    Оператор
+                    <select id="replaceOperator">
+                        <option value="">--</option>
+                        <option th:each="person : ${persons}"
+                                th:value="${person.id}"
+                                th:text="${person.name}"></option>
+                    </select>
+                </label>
+            </div>
+            <div class="form-errors" id="personDeleteErrors" hidden></div>
+            <div class="form-actions">
+                <button type="button" id="personDeleteCancel">Отмена</button>
+                <button type="submit" id="personDeleteSubmit">Удалить</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="personDetailsDialog">
+        <div class="details-content">
+            <h2 id="personDetailsTitle">Информация о персона</h2>
+            <dl>
+                <dt>Имя</dt>
+                <dd id="personDetailsName"></dd>
+                <dt>Вес</dt>
+                <dd id="personDetailsWeight"></dd>
+                <dt>Гражданство</dt>
+                <dd id="personDetailsNationality"></dd>
+                <dt>Цвет глаз</dt>
+                <dd id="personDetailsEyeColor"></dd>
+                <dt>Цвет волос</dt>
+                <dd id="personDetailsHairColor"></dd>
+                <dt>Локация</dt>
+                <dd id="personDetailsLocation"></dd>
+            </dl>
+            <div class="form-actions">
+                <button type="button" id="personDetailsClose">Закрыть</button>
+            </div>
+        </div>
+    </dialog>
+</section>
+<th:block th:fragment="scripts">
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        window.PersonConfig = {
+            colors: [[${colors}]],
+            countries: [[${countries}]],
+            locations: [[${locations}]],
+            persons: [[${persons}]]
+        };
+    /*]]>*/
+    </script>
+    <script th:src="@{/js/persons.js}" defer></script>
+</th:block>
+</html>
