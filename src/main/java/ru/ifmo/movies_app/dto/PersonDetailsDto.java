@@ -13,6 +13,8 @@ public class PersonDetailsDto {
     private final Country nationality;
     private final Long locationId;
     private final String locationName;
+    private final Double locationX;
+    private final Float locationY;
 
     public PersonDetailsDto(Long id,
                             String name,
@@ -21,7 +23,9 @@ public class PersonDetailsDto {
                             Float weight,
                             Country nationality,
                             Long locationId,
-                            String locationName) {
+                            String locationName,
+                            Double locationX,
+                            Float locationY) {
         this.id = id;
         this.name = name;
         this.eyeColor = eyeColor;
@@ -30,6 +34,8 @@ public class PersonDetailsDto {
         this.nationality = nationality;
         this.locationId = locationId;
         this.locationName = locationName;
+        this.locationX = locationX;
+        this.locationY = locationY;
     }
 
     public Long getId() {
@@ -62,5 +68,13 @@ public class PersonDetailsDto {
 
     public String getLocationName() {
         return locationName;
+    }
+
+    public Double getLocationX() {
+        return locationX;
+    }
+
+    public Float getLocationY() {
+        return locationY;
     }
 }

@@ -53,9 +53,9 @@ function resetForm() {
         return;
     }
     form.reset();
+    fieldRefs.id.value = '';
     errorBox.hidden = true;
     errorBox.textContent = '';
-    fieldRefs.id.value = '';
     state.mode = 'create';
     state.currentId = null;
     if (submitButton) {
@@ -132,7 +132,7 @@ function openEditDialog(id) {
     fetch(`/api/persons/${id}`)
         .then((response) => {
             if (!response.ok) {
-                throw new Error(`Не удалось загрузить персону #${id}`);
+                throw new Error('Не удалось загрузить данные персоны');
             }
             return response.json();
         })
@@ -151,15 +151,15 @@ function resolveLocationName(locationId) {
     if (!locationId || !Array.isArray(config.locations)) {
         return null;
     }
-    const loc = config.locations.find((item) => Number(item.id) === Number(locationId));
-    return loc ? loc.name : null;
+    const item = config.locations.find((loc) => Number(loc.id) === Number(locationId));
+    return item ? item.name : null;
 }
 
 function resetDetailsDialog() {
     if (!detailsRefs) {
         return;
     }
-    detailsRefs.title.textContent = 'Информация о персона';
+    detailsRefs.title.textContent = 'Информация о персоне';
     detailsRefs.name.textContent = '';
     detailsRefs.weight.textContent = '';
     detailsRefs.nationality.textContent = '';
@@ -168,11 +168,36 @@ function resetDetailsDialog() {
     detailsRefs.location.textContent = '';
 }
 
+function buildLocationText(data) {
+    if (!data.locationName && data.locationX == null && data.locationY == null) {
+        return '—';
+    }
+    const parts = [];
+    if (data.locationName) {
+        parts.push(data.locationName);
+    }
+    const coords = [];
+    if (data.locationX != null) {
+        coords.push(`x=${Number(data.locationX).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}`);
+    }
+    if (data.locationY != null) {
+        coords.push(`y=${Number(data.locationY).toLocaleString('ru-RU', { maximumFractionDigits: 2 })}`);
+    }
+    if (coords.length > 0) {
+        parts.push(`(${coords.join(', ')})`);
+    }
+    if (parts.length === 0) {
+        const cachedName = resolveLocationName(data.locationId);
+        return cachedName ?? '—';
+    }
+    return parts.join(' ');
+}
+
 function showDetails(data) {
     if (!detailsDialog || !detailsRefs) {
         return;
     }
-    detailsRefs.title.textContent = `Информация о персона #${data.id}`;
+    detailsRefs.title.textContent = `Информация о персоне #${data.id}`;
     detailsRefs.name.textContent = data.name ?? '—';
     detailsRefs.weight.textContent = data.weight != null
         ? Number(data.weight).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -180,13 +205,12 @@ function showDetails(data) {
     detailsRefs.nationality.textContent = data.nationality ?? '—';
     detailsRefs.eyeColor.textContent = data.eyeColor ?? '—';
     detailsRefs.hairColor.textContent = data.hairColor ?? '—';
-    const location = resolveLocationName(data.locationId);
-    detailsRefs.location.textContent = location ?? '—';
+    detailsRefs.location.textContent = buildLocationText(data);
     detailsDialog.showModal();
 }
 
 function openDetailsDialog(id) {
-    fetch(`/api/persons/${id}`)
+    fetch(`/api/persons/${id}/details`)
         .then((response) => {
             if (!response.ok) {
                 throw new Error('Не удалось загрузить данные персоны');
@@ -217,31 +241,6 @@ function closeDeleteDialog() {
     resetDeleteDialog();
 }
 
-function openDeleteDialog(id, name) {
-    if (!deleteDialog || !deleteFieldRefs) {
-        return;
-    }
-    resetDeleteDialog();
-    deleteFieldRefs.id.value = id;
-    deleteSummary.textContent = `Персона «${name}» будет удалена. Выберите замену для каждого типа роли.`;
-    updateDeleteSelectOptions(id);
-    deleteDialog.showModal();
-}
-
-function gatherDeletePayload() {
-    const payload = {};
-    if (deleteFieldRefs.director.value) {
-        payload.directorReplacementId = parseInt(deleteFieldRefs.director.value, 10);
-    }
-    if (deleteFieldRefs.screenwriter.value) {
-        payload.screenwriterReplacementId = parseInt(deleteFieldRefs.screenwriter.value, 10);
-    }
-    if (deleteFieldRefs.operator.value) {
-        payload.operatorReplacementId = parseInt(deleteFieldRefs.operator.value, 10);
-    }
-    return payload;
-}
-
 function updateDeleteSelectOptions(targetId) {
     if (!deleteFieldRefs) {
         return;
@@ -266,14 +265,38 @@ function updateDeleteSelectOptions(targetId) {
     });
 }
 
+function gatherDeletePayload() {
+    const payload = {};
+    if (deleteFieldRefs.director.value) {
+        payload.directorReplacementId = parseInt(deleteFieldRefs.director.value, 10);
+    }
+    if (deleteFieldRefs.screenwriter.value) {
+        payload.screenwriterReplacementId = parseInt(deleteFieldRefs.screenwriter.value, 10);
+    }
+    if (deleteFieldRefs.operator.value) {
+        payload.operatorReplacementId = parseInt(deleteFieldRefs.operator.value, 10);
+    }
+    return payload;
+}
+
+function openDeleteDialog(id, name) {
+    if (!deleteDialog || !deleteFieldRefs) {
+        return;
+    }
+    resetDeleteDialog();
+    deleteFieldRefs.id.value = id;
+    deleteSummary.textContent = `Персона «${name}» будет удалена. Укажите замену для каждой роли.`;
+    updateDeleteSelectOptions(id);
+    deleteDialog.showModal();
+}
+
 async function submitForm(event) {
     event.preventDefault();
-    const payload = gatherPayload();
     submitButton.disabled = true;
+    const payload = gatherPayload();
 
-    const baseUrl = '/api/persons';
     const isEdit = state.mode === 'edit' && state.currentId != null;
-    const url = isEdit ? `${baseUrl}/${state.currentId}` : baseUrl;
+    const url = isEdit ? `/api/persons/${state.currentId}` : '/api/persons';
     const method = isEdit ? 'PUT' : 'POST';
 
     try {
@@ -294,6 +317,11 @@ async function submitForm(event) {
                 const body = await response.json().catch(() => ({}));
                 message = body.message || message;
                 details = body.details || null;
+            } else {
+                const raw = await response.text().catch(() => '');
+                if (raw) {
+                    message = raw;
+                }
             }
             showErrors(message, details);
             submitButton.disabled = false;

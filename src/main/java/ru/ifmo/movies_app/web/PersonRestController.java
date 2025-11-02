@@ -46,6 +46,12 @@ public class PersonRestController {
         return personService.getForm(id);
     }
 
+    @GetMapping("/{id}/details")
+    public PersonDetailsDto getDetails(@PathVariable Long id) {
+        Person person = personService.getPersonById(id);
+        return toDetailsDto(person);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public PersonDetailsDto create(@Valid @RequestBody PersonCreateRequest dto) {
@@ -77,7 +83,9 @@ public class PersonRestController {
                 person.getWeight(),
                 person.getNationality(),
                 location != null ? location.getId() : null,
-                location != null ? location.getName() : null
+                location != null ? location.getName() : null,
+                location != null ? location.getX() : null,
+                location != null ? location.getY() : null
         );
     }
 }

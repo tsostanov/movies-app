@@ -37,6 +37,11 @@ public class LocationRestController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/{id}")
+    public LocationDto get(@PathVariable Long id) {
+        return toDto(locationService.getById(id));
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public LocationDto create(@Valid @RequestBody LocationDto dto) {

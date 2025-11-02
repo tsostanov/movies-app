@@ -49,9 +49,14 @@ public class PersonService {
     }
 
     @Transactional(readOnly = true)
+    public Person getPersonById(Long id) {
+        return personRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Персона %d не найдена".formatted(id)));
+    }
+
+    @Transactional(readOnly = true)
     public PersonFormDto getForm(Long id) {
-        Person person = personRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Person %d not found".formatted(id)));
+        Person person = getPersonById(id);
         PersonFormDto dto = new PersonFormDto();
         dto.setId(person.getId());
         dto.setName(person.getName());
@@ -72,17 +77,14 @@ public class PersonService {
 
     @Transactional
     public Person update(Long id, PersonFormDto dto) {
-        Person person = personRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Person %d not found".formatted(id)));
+        Person person = getPersonById(id);
         applyDto(dto, person);
         return personRepository.save(person);
     }
 
     @Transactional
     public void delete(Long id, PersonReassignmentDto reassignment) {
-        Person person = personRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Person %d not found".formatted(id)));
-
+        Person person = getPersonById(id);
         reassignMovies(person, reassignment);
         personRepository.delete(person);
     }
@@ -95,7 +97,7 @@ public class PersonService {
         person.setNationality(dto.getNationality());
         if (dto.getLocationId() != null) {
             Location location = locationRepository.findById(dto.getLocationId())
-                    .orElseThrow(() -> new NotFoundException("Location not found"));
+                    .orElseThrow(() -> new NotFoundException("Локация не найдена"));
             person.setLocation(location);
         } else {
             person.setLocation(null);
@@ -131,12 +133,21 @@ public class PersonService {
 
     private Person requireReplacement(Long replacementId, Person current, String role) {
         if (replacementId == null) {
-            throw new IllegalArgumentException("Replacement for %s is required".formatted(role));
+            throw new IllegalArgumentException("Нужно выбрать замену для %s".formatted(roleInGenitive(role)));
         }
         if (replacementId.equals(current.getId())) {
-            throw new IllegalArgumentException("Replacement must differ from the removed person");
+            throw new IllegalArgumentException("Заменой не может быть удаляемый человек");
         }
         return personRepository.findById(replacementId)
-                .orElseThrow(() -> new NotFoundException("Replacement person not found"));
+                .orElseThrow(() -> new NotFoundException("Выбранная замена не найдена"));
+    }
+
+    private String roleInGenitive(String role) {
+        return switch (role) {
+            case "director" -> "режиссёра";
+            case "screenwriter" -> "сценариста";
+            case "operator" -> "оператора";
+            default -> "сотрудника";
+        };
     }
 }

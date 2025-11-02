@@ -23,6 +23,12 @@ public class LocationService {
         return locationRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public Location getById(Long id) {
+        return locationRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Локация %d не найдена".formatted(id)));
+    }
+
     @Transactional
     public Location create(LocationDto dto) {
         Location location = new Location();
@@ -33,7 +39,7 @@ public class LocationService {
     @Transactional
     public Location update(Long id, LocationDto dto) {
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Location %d not found".formatted(id)));
+                .orElseThrow(() -> new NotFoundException("Локация %d не найдена".formatted(id)));
         apply(dto, location);
         return locationRepository.save(location);
     }
@@ -41,7 +47,7 @@ public class LocationService {
     @Transactional
     public void delete(Long id) {
         Location location = locationRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Location %d not found".formatted(id)));
+                .orElseThrow(() -> new NotFoundException("Локация %d не найдена".formatted(id)));
         locationRepository.delete(location);
     }
 

@@ -14,23 +14,29 @@
             <th>Название</th>
             <th>X</th>
             <th>Y</th>
+            <th>Действия</th>
         </tr>
         </thead>
         <tbody>
         <tr th:if="${items.isEmpty()}">
-            <td colspan="3">Нет данных</td>
+            <td colspan="4">Нет данных</td>
         </tr>
         <tr th:each="location : ${items}">
             <td th:text="${location.name}"></td>
             <td th:text="${location.x}"></td>
             <td th:text="${location.y}"></td>
+            <td class="actions">
+                <button type="button" class="editLocationBtn" th:data-id="${location.id}">Изменить</button>
+                <button type="button" class="deleteLocationBtn" th:data-id="${location.id}">Удалить</button>
+            </td>
         </tr>
         </tbody>
     </table>
 
     <dialog id="locationDialog">
         <form id="locationForm" novalidate>
-            <h2>Новая локация</h2>
+            <h2 id="locationDialogTitle">Локация</h2>
+            <input type="hidden" id="locationId">
             <div class="form-grid">
                 <label>
                     Название *
