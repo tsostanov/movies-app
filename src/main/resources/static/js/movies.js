@@ -1,4 +1,5 @@
-const config = window.MovieConfig ?? { genres: [], mpaaRatings: [], persons: [] };
+const config = window.MovieConfig ?? { genres: [], mpaaRatings: [], persons: [], currentUser: null };
+const userInfo = config.currentUser ?? { username: null, admin: false };
 
 const dialog = document.getElementById('movieDialog');
 const form = document.getElementById('movieForm');
@@ -7,7 +8,7 @@ const cancelButton = document.getElementById('movieDialogCancel');
 const createButton = document.getElementById('createMovieBtn');
 const submitButton = document.getElementById('movieDialogSubmit');
 const pagination = document.querySelector('.pagination');
-const table = document.querySelector('table tbody');
+const table = document.querySelector('.movies-table tbody');
 const detailsDialog = document.getElementById('movieDetailsDialog');
 const detailsCloseButton = document.getElementById('movieDetailsClose');
 const detailsRefs = detailsDialog ? {
@@ -42,6 +43,16 @@ const fieldRefs = {
     goldenPalmCount: document.getElementById('movieGoldenPalmCount'),
     genre: document.getElementById('movieGenre')
 };
+
+const importForm = document.getElementById('movieImportForm');
+const importFileInput = document.getElementById('importFile');
+const importErrorsBox = document.getElementById('importFormErrors');
+const importSuccessBox = document.getElementById('importFormSuccess');
+
+const historyAdminToggle = document.getElementById('historyAdminMode');
+const historyErrorsBox = document.getElementById('historyErrors');
+const historyBody = document.getElementById('importHistoryBody');
+const historyReloadButton = document.getElementById('historyReloadBtn');
 
 const state = {
     mode: 'create',
@@ -130,7 +141,7 @@ function renderPersonCard(roleLabel, person) {
     if (!person) {
         const empty = document.createElement('p');
         empty.className = 'person-empty';
-        empty.textContent = 'Не указан';
+        empty.textContent = 'Не указано';
         wrapper.append(empty);
         return wrapper;
     }
@@ -165,15 +176,12 @@ function fillDetails(movie) {
 
     const persons = detailsRefs.persons;
     persons.replaceChildren();
-
     const roles = [
         { key: 'director', label: 'Режиссёр' },
         { key: 'screenwriter', label: 'Сценарист' },
         { key: 'operator', label: 'Оператор' }
     ];
-    roles.forEach(({ key, label }) => {
-        persons.append(renderPersonCard(label, movie[key]));
-    });
+    roles.forEach(({ key, label }) => persons.append(renderPersonCard(label, movie[key])));
 }
 
 function openDetailsDialog(id) {
@@ -181,25 +189,16 @@ function openDetailsDialog(id) {
         return;
     }
     resetDetails();
-    detailsRefs.name.textContent = 'Загрузка...';
     detailsDialog.showModal();
     fetch(`/api/movies/${id}`)
         .then((response) => {
             if (!response.ok) {
                 return response.json()
-                    .then((body) => {
-                        const message = body.message || 'Не удалось загрузить данные фильма';
-                        throw new Error(message);
-                    })
-                    .catch(() => {
-                        throw new Error('Не удалось загрузить данные фильма');
-                    });
+                    .then((body) => Promise.reject(new Error(body.message || 'Не удалось загрузить фильм')));
             }
             return response.json();
         })
-        .then((data) => {
-            fillDetails(data);
-        })
+        .then((data) => fillDetails(data))
         .catch((error) => {
             showAlert(error.message);
             closeDetailsDialog();
@@ -210,9 +209,7 @@ function closeDetailsDialog() {
     if (!detailsDialog) {
         return;
     }
-    if (detailsDialog.open) {
-        detailsDialog.close();
-    }
+    detailsDialog.close();
     resetDetails();
 }
 
@@ -268,10 +265,15 @@ function ensureFormOptions() {
 }
 
 function resetForm() {
+    if (!form) {
+        return;
+    }
     form.reset();
-    state.currentId = null;
+    fieldRefs.id.value = '';
     errorBox.hidden = true;
     errorBox.textContent = '';
+    state.mode = 'create';
+    state.currentId = null;
     if (submitButton) {
         submitButton.disabled = false;
     }
@@ -281,52 +283,58 @@ function openCreateDialog() {
     state.mode = 'create';
     resetForm();
     ensureFormOptions();
-    toggleSubmitAvailability();
     document.getElementById('movieDialogTitle').textContent = 'Новый фильм';
-    dialog.showModal();
+    if (dialog) {
+        dialog.showModal();
+    }
     fieldRefs.name.focus();
 }
 
+function fillForm(data) {
+    fieldRefs.id.value = data.id ?? '';
+    fieldRefs.name.value = data.name ?? '';
+    fieldRefs.coordX.value = data.coordinates?.x ?? '';
+    fieldRefs.coordY.value = data.coordinates?.y ?? '';
+    fieldRefs.oscarsCount.value = data.oscarsCount ?? '';
+    fieldRefs.budget.value = data.budget ?? '';
+    fieldRefs.totalBoxOffice.value = data.totalBoxOffice ?? '';
+    fieldRefs.mpaaRating.value = data.mpaaRating ?? '';
+    fieldRefs.directorId.value = data.directorId ?? '';
+    fieldRefs.screenwriterId.value = data.screenwriterId ?? '';
+    fieldRefs.operatorId.value = data.operatorId ?? '';
+    fieldRefs.length.value = data.length ?? '';
+    fieldRefs.goldenPalmCount.value = data.goldenPalmCount ?? '';
+    fieldRefs.genre.value = data.genre ?? '';
+}
+
 function openEditDialog(id) {
+    if (!dialog) {
+        return;
+    }
     state.mode = 'edit';
-    resetForm();
     state.currentId = id;
+    resetForm();
     ensureFormOptions();
-    fieldRefs.id.value = id ?? '';
+    document.getElementById('movieDialogTitle').textContent = 'Изменение фильма';
+    submitButton.disabled = true;
+    dialog.showModal();
     fetch(`/api/movies/${id}/form`)
         .then((response) => {
             if (!response.ok) {
-                throw new Error('Не удалось загрузить данные фильма');
+                return response.json()
+                    .then((body) => Promise.reject(new Error(body.message || 'Не удалось загрузить фильм')));
             }
             return response.json();
         })
         .then((data) => {
             fillForm(data);
-            document.getElementById('movieDialogTitle').textContent = 'Редактирование фильма';
-            toggleSubmitAvailability();
-            dialog.showModal();
+            submitButton.disabled = false;
             fieldRefs.name.focus();
         })
         .catch((error) => {
-            showAlert(error.message);
+            showErrors(error.message);
+            closeDialog();
         });
-}
-
-function fillForm(dto) {
-    fieldRefs.id.value = dto.id ?? '';
-    fieldRefs.name.value = dto.name ?? '';
-    fieldRefs.coordX.value = dto.coordinates?.x ?? '';
-    fieldRefs.coordY.value = dto.coordinates?.y ?? '';
-    fieldRefs.oscarsCount.value = dto.oscarsCount ?? '';
-    fieldRefs.budget.value = dto.budget ?? '';
-    fieldRefs.totalBoxOffice.value = dto.totalBoxOffice ?? '';
-    fieldRefs.mpaaRating.value = dto.mpaaRating ?? '';
-    fieldRefs.directorId.value = dto.directorId ?? '';
-    fieldRefs.screenwriterId.value = dto.screenwriterId ?? '';
-    fieldRefs.operatorId.value = dto.operatorId ?? '';
-    fieldRefs.length.value = dto.length ?? '';
-    fieldRefs.goldenPalmCount.value = dto.goldenPalmCount ?? '';
-    fieldRefs.genre.value = dto.genre ?? '';
 }
 
 function getCurrentId() {
@@ -341,19 +349,7 @@ function getCurrentId() {
 }
 
 function gatherPayload() {
-    const parseNumberField = (input, { required = false, parser = Number } = {}) => {
-        const value = input.value;
-        if (value === '' || value === null || value === undefined) {
-            return required ? null : null;
-        }
-        const parsed = parser(value);
-        if (Number.isNaN(parsed)) {
-            return null;
-        }
-        return parsed;
-    };
-
-    const numberOrNull = (value, parser = Number) => {
+    const parseNumber = (value, parser = Number) => {
         if (value === '' || value === null || value === undefined) {
             return null;
         }
@@ -365,24 +361,25 @@ function gatherPayload() {
         id: getCurrentId(),
         name: fieldRefs.name.value.trim(),
         coordinates: {
-            x: parseNumberField(fieldRefs.coordX, { required: true, parser: parseFloat }),
-            y: parseNumberField(fieldRefs.coordY, { required: true, parser: (v) => parseInt(v, 10) })
+            x: parseNumber(fieldRefs.coordX.value, parseFloat),
+            y: parseNumber(fieldRefs.coordY.value, (v) => parseInt(v, 10))
         },
-        oscarsCount: numberOrNull(fieldRefs.oscarsCount.value, (v) => parseInt(v, 10)),
-        budget: parseNumberField(fieldRefs.budget, { required: true, parser: (v) => parseInt(v, 10) }),
-        totalBoxOffice: parseNumberField(fieldRefs.totalBoxOffice, { required: true, parser: parseFloat }),
+        oscarsCount: parseNumber(fieldRefs.oscarsCount.value, (v) => parseInt(v, 10)),
+        budget: parseNumber(fieldRefs.budget.value, (v) => parseInt(v, 10)),
+        totalBoxOffice: parseNumber(fieldRefs.totalBoxOffice.value, parseFloat),
         mpaaRating: fieldRefs.mpaaRating.value || null,
-        directorId: numberOrNull(fieldRefs.directorId.value, (v) => parseInt(v, 10)),
-        screenwriterId: numberOrNull(fieldRefs.screenwriterId.value, (v) => parseInt(v, 10)),
-        operatorId: numberOrNull(fieldRefs.operatorId.value, (v) => parseInt(v, 10)),
-        length: numberOrNull(fieldRefs.length.value, (v) => parseInt(v, 10)),
-        goldenPalmCount: parseNumberField(fieldRefs.goldenPalmCount, { required: true, parser: (v) => parseInt(v, 10) }),
+        directorId: parseNumber(fieldRefs.directorId.value, (v) => parseInt(v, 10)),
+        screenwriterId: parseNumber(fieldRefs.screenwriterId.value, (v) => parseInt(v, 10)),
+        operatorId: parseNumber(fieldRefs.operatorId.value, (v) => parseInt(v, 10)),
+        length: parseNumber(fieldRefs.length.value, (v) => parseInt(v, 10)),
+        goldenPalmCount: parseNumber(fieldRefs.goldenPalmCount.value, (v) => parseInt(v, 10)),
         genre: fieldRefs.genre.value || null
     };
 }
 
 function showErrors(message, details) {
     if (!errorBox) {
+        window.alert(message);
         return;
     }
     errorBox.hidden = false;
@@ -408,7 +405,7 @@ function toggleSubmitAvailability() {
         return;
     }
     if (!Array.isArray(config.persons) || config.persons.length === 0) {
-        showErrors('Нет доступных сценаристов. Сначала добавьте персону в разделе «Персоны».');
+        showErrors('Нет доступных персон. Сначала создайте хотя бы одну персону.');
         submitButton.disabled = true;
     } else {
         errorBox.hidden = true;
@@ -506,12 +503,151 @@ function setupWebSocket() {
     }
 }
 
+function clearImportMessages() {
+    if (importErrorsBox) {
+        importErrorsBox.hidden = true;
+        importErrorsBox.textContent = '';
+    }
+    if (importSuccessBox) {
+        importSuccessBox.hidden = true;
+        importSuccessBox.textContent = '';
+    }
+}
+
+function showImportError(message) {
+    if (!importErrorsBox) {
+        showAlert(message);
+        return;
+    }
+    importErrorsBox.hidden = false;
+    importErrorsBox.textContent = message;
+    if (importSuccessBox) {
+        importSuccessBox.hidden = true;
+        importSuccessBox.textContent = '';
+    }
+}
+
+function showImportSuccess(message) {
+    if (!importSuccessBox) {
+        showAlert(message);
+        return;
+    }
+    importSuccessBox.hidden = false;
+    importSuccessBox.textContent = message;
+    if (importErrorsBox) {
+        importErrorsBox.hidden = true;
+        importErrorsBox.textContent = '';
+    }
+}
+
+function clearHistoryError() {
+    if (historyErrorsBox) {
+        historyErrorsBox.hidden = true;
+        historyErrorsBox.textContent = '';
+    }
+}
+
+function showHistoryError(message) {
+    if (!historyErrorsBox) {
+        showAlert(message);
+        return;
+    }
+    historyErrorsBox.hidden = false;
+    historyErrorsBox.textContent = message;
+}
+
+function renderHistoryRows(rows) {
+    if (!historyBody) {
+        return;
+    }
+    historyBody.replaceChildren();
+    if (!rows || rows.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 7;
+        td.textContent = 'История пока пуста';
+        tr.append(td);
+        historyBody.append(tr);
+        return;
+    }
+    rows.forEach((op) => {
+        const tr = document.createElement('tr');
+        const cells = [
+            op.id ?? '—',
+            op.username ?? '—',
+            op.status ?? '—',
+            formatDateTime(op.createdAt),
+            formatDateTime(op.completedAt),
+            op.addedCount ?? '—',
+            op.errorMessage ?? '—'
+        ];
+        cells.forEach((value) => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            tr.append(td);
+        });
+        historyBody.append(tr);
+    });
+}
+
+async function loadImportHistory() {
+    if (!historyBody) {
+        return;
+    }
+    const adminMode = Boolean(historyAdminToggle?.checked && userInfo.admin);
+    clearHistoryError();
+    try {
+        const response = await fetch(`/api/movies/import/history?all=${adminMode}`);
+        if (!response.ok) {
+            const body = await response.json().catch(() => ({}));
+            throw new Error(body.message || 'Не удалось загрузить историю импортов');
+        }
+        const data = await response.json();
+        renderHistoryRows(data);
+    } catch (error) {
+        showHistoryError(error.message);
+    }
+}
+
+async function submitImportFile(event) {
+    event.preventDefault();
+    if (!importForm) {
+        return;
+    }
+    clearImportMessages();
+    if (!importFileInput?.files?.length) {
+        showImportError('Выберите YAML-файл для импорта');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', importFileInput.files[0]);
+    try {
+        const response = await fetch('/api/movies/import', {
+            method: 'POST',
+            body: formData
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(body.message || 'Не удалось выполнить импорт');
+        }
+        const added = body.addedCount ?? 0;
+        const statusText = body.status === 'SUCCESS'
+            ? `Импорт #${body.id} завершён. Добавлено фильмов: ${added}`
+            : `Операция #${body.id} завершилась со статусом ${body.status}`;
+        showImportSuccess(statusText);
+        importForm.reset();
+        await loadImportHistory();
+    } catch (error) {
+        showImportError(error.message);
+    }
+}
+
 async function submitForm(event) {
     event.preventDefault();
     const payload = gatherPayload();
     const currentId = getCurrentId();
     if (state.mode === 'edit' && (currentId === null || Number.isNaN(currentId))) {
-        showErrors('Не выбран фильм для редактирования');
+        showErrors('Не удалось определить фильм для редактирования');
         return;
     }
     const url = state.mode === 'edit' ? `/api/movies/${currentId}` : '/api/movies';
@@ -541,7 +677,9 @@ async function submitForm(event) {
 }
 
 function closeDialog() {
-    dialog.close();
+    if (dialog) {
+        dialog.close();
+    }
     resetForm();
 }
 
@@ -585,9 +723,7 @@ function handleTableClick(event) {
 
 function init() {
     if (createButton) {
-        createButton.addEventListener('click', () => {
-            openCreateDialog();
-        });
+        createButton.addEventListener('click', () => openCreateDialog());
     }
     if (cancelButton) {
         cancelButton.addEventListener('click', () => closeDialog());
@@ -609,6 +745,20 @@ function init() {
         detailsDialog.addEventListener('close', () => resetDetails());
         resetDetails();
     }
+    if (importForm) {
+        importForm.addEventListener('submit', submitImportFile);
+    }
+    if (historyReloadButton) {
+        historyReloadButton.addEventListener('click', () => loadImportHistory());
+    }
+    if (historyAdminToggle) {
+        historyAdminToggle.addEventListener('change', () => loadImportHistory());
+    }
+    if (historyBody) {
+        loadImportHistory();
+    }
+    ensureFormOptions();
+    toggleSubmitAvailability();
     setupPagination();
     setupWebSocket();
 }

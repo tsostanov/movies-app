@@ -1,0 +1,44 @@
+package ru.ifmo.movies_app.web;
+
+import java.security.Principal;
+import java.util.List;
+
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import ru.ifmo.movies_app.dto.ImportOperationDto;
+import ru.ifmo.movies_app.service.importer.MovieImportService;
+
+@RestController
+@RequestMapping("/api/movies/import")
+public class MovieImportRestController {
+
+    private final MovieImportService movieImportService;
+
+    public MovieImportRestController(MovieImportService movieImportService) {
+        this.movieImportService = movieImportService;
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ImportOperationDto importMovies(@RequestParam("file") MultipartFile file,
+                                           Principal principal) {
+        String username = principal != null ? principal.getName() : null;
+        return movieImportService.importYaml(file, username);
+    }
+
+    @GetMapping("/history")
+    public List<ImportOperationDto> history(@RequestParam(value = "all", defaultValue = "false") boolean all,
+                                            Principal principal,
+                                            Authentication authentication) {
+        boolean adminView = all && authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        String username = principal != null ? principal.getName() : null;
+        return movieImportService.getHistory(username, adminView);
+    }
+}

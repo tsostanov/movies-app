@@ -26,13 +26,16 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final PersonRepository personRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final MovieUniquenessValidator uniquenessValidator;
 
     public MovieService(MovieRepository movieRepository,
                         PersonRepository personRepository,
-                        SimpMessagingTemplate messagingTemplate) {
+                        SimpMessagingTemplate messagingTemplate,
+                        MovieUniquenessValidator uniquenessValidator) {
         this.movieRepository = movieRepository;
         this.personRepository = personRepository;
         this.messagingTemplate = messagingTemplate;
+        this.uniquenessValidator = uniquenessValidator;
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +60,7 @@ public class MovieService {
 
     @Transactional
     public MovieDetailsDto create(MovieFormDto dto) {
+        uniquenessValidator.validate(dto, null);
         Movie movie = new Movie();
         applyDto(dto, movie);
         Movie saved = movieRepository.save(movie);
@@ -69,6 +73,7 @@ public class MovieService {
     public MovieDetailsDto update(Long id, MovieFormDto dto) {
         Movie movie = movieRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new NotFoundException("Movie %d not found".formatted(id)));
+        uniquenessValidator.validate(dto, id);
         applyDto(dto, movie);
         Movie saved = movieRepository.save(movie);
         MovieTableRowDto row = toTableRowDto(saved);
@@ -186,6 +191,7 @@ public class MovieService {
 
     @Transactional
     public void persistAndBroadcast(Movie movie) {
+        uniquenessValidator.validate(movie);
         Movie saved = movieRepository.save(movie);
         MovieTableRowDto row = toTableRowDto(saved);
         broadcast(new MovieChangeMessage(ChangeType.UPDATED, saved.getId(), row));

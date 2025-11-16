@@ -1,0 +1,64 @@
+movies:
+  - name: "Autumn Lights"
+    coordinates:
+      x: 48.7
+      y: 320
+    oscarsCount: 1
+    budget: 4500000
+    totalBoxOffice: 12.4
+    mpaaRating: "PG_13"
+    director:
+      data:
+        name: "Mila North"
+        weight: 60.5
+        nationality: "GERMANY"
+        eyeColor: "GREEN"
+        hairColor: "YELLOW"
+    screenwriter:
+      data:
+        name: "Egor Khazin"
+        weight: 72.3
+        nationality: "SPAIN"
+        location:
+          name: "Madrid Hub"
+          x: 12.4
+          y: 45.0
+    operator:
+      data:
+        name: "Lia Costa"
+        weight: 58.1
+        nationality: "THAILAND"
+        location:
+          name: "Bangkok Rooftop"
+          x: 88.0
+          y: 120.0
+    length: 118
+    goldenPalmCount: 2
+    genre: "DRAMA"
+  - name: "Northern Tale"
+    coordinates:
+      x: -210.5
+      y: 870
+    oscarsCount: 1
+    budget: 7800000
+    totalBoxOffice: 23.9
+    mpaaRating: "R"
+    director:
+      data:
+        name: "Oscar Hale"
+        weight: 82.0
+        nationality: "GERMANY"
+    screenwriter:
+      data:
+        name: "Sienna Wood"
+        weight: 65.0
+        nationality: "SPAIN"
+        eyeColor: "BLUE"
+    operator:
+      data:
+        name: "Yuri Tan"
+        weight: 77.5
+        nationality: "THAILAND"
+    length: 134
+    goldenPalmCount: 1
+    genre: "WESTERN"

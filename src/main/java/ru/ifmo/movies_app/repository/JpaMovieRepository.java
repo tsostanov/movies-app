@@ -23,6 +23,7 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import ru.ifmo.movies_app.domain.Movie;
+import ru.ifmo.movies_app.domain.MovieGenre;
 import ru.ifmo.movies_app.domain.Person;
 import ru.ifmo.movies_app.dto.MovieTableFilter;
 
@@ -202,5 +203,44 @@ public class JpaMovieRepository implements MovieRepository {
                         "select m from Movie m where m.operator = :person", Movie.class)
                 .setParameter("person", operator)
                 .getResultList();
+    }
+
+    @Override
+    public boolean existsByNameIgnoreCase(String name, Long excludeId) {
+        if (name == null) {
+            return false;
+        }
+        String normalized = name.trim().toLowerCase(Locale.ROOT);
+        StringBuilder jpql = new StringBuilder("select count(m) from Movie m where lower(m.name) = :name");
+        if (excludeId != null) {
+            jpql.append(" and m.id <> :excludeId");
+        }
+        var query = entityManager.createQuery(jpql.toString(), Long.class)
+                .setParameter("name", normalized);
+        if (excludeId != null) {
+            query.setParameter("excludeId", excludeId);
+        }
+        Long count = query.getSingleResult();
+        return count != null && count > 0;
+    }
+
+    @Override
+    public boolean existsByScreenwriterAndGenre(Long screenwriterId, MovieGenre genre, Long excludeId) {
+        if (screenwriterId == null || genre == null) {
+            return false;
+        }
+        StringBuilder jpql = new StringBuilder(
+                "select count(m) from Movie m where m.screenwriter.id = :screenwriterId and m.genre = :genre");
+        if (excludeId != null) {
+            jpql.append(" and m.id <> :excludeId");
+        }
+        var query = entityManager.createQuery(jpql.toString(), Long.class)
+                .setParameter("screenwriterId", screenwriterId)
+                .setParameter("genre", genre);
+        if (excludeId != null) {
+            query.setParameter("excludeId", excludeId);
+        }
+        Long count = query.getSingleResult();
+        return count != null && count > 0;
     }
 }

@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout('Локации', ~{::section}, ~{::scripts})}">
+    th:replace="~{layout :: layout('Локации', ~{::section}, ~{::scripts})}">
 <section>
     <h1>Локации</h1>
 
@@ -10,26 +10,26 @@
 
     <table>
         <thead>
-        <tr>
-            <th>Название</th>
-            <th>X</th>
-            <th>Y</th>
-            <th>Действия</th>
-        </tr>
+            <tr>
+                <th>Название</th>
+                <th>X</th>
+                <th>Y</th>
+                <th>Действия</th>
+            </tr>
         </thead>
         <tbody>
-        <tr th:if="${items.isEmpty()}">
-            <td colspan="4">Нет данных</td>
-        </tr>
-        <tr th:each="location : ${items}">
-            <td th:text="${location.name}"></td>
-            <td th:text="${location.x}"></td>
-            <td th:text="${location.y}"></td>
-            <td class="actions">
-                <button type="button" class="editLocationBtn" th:data-id="${location.id}">Изменить</button>
-                <button type="button" class="deleteLocationBtn" th:data-id="${location.id}">Удалить</button>
-            </td>
-        </tr>
+            <tr th:if="${items.isEmpty()}">
+                <td colspan="4">Нет данных</td>
+            </tr>
+            <tr th:each="location : ${items}">
+                <td th:text="${location.name}"></td>
+                <td th:text="${location.x}"></td>
+                <td th:text="${location.y}"></td>
+                <td class="actions">
+                    <button type="button" class="editLocationBtn" th:data-id="${location.id}">Изменить</button>
+                    <button type="button" class="deleteLocationBtn" th:data-id="${location.id}">Удалить</button>
+                </td>
+            </tr>
         </tbody>
     </table>
 
@@ -62,4 +62,5 @@
 <th:block th:fragment="scripts">
     <script th:src="@{/js/locations.js}" defer></script>
 </th:block>
+
 </html>

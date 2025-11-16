@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout('Фильмы', ~{::section}, ~{::scripts})}">
-<section>
+    th:replace="~{layout :: layout('Фильмы', ~{::section}, ~{::scripts})}">
+<section class="movies-page">
     <h1>Фильмы</h1>
+
+    <div class="auth-info">
+        <span>Вы вошли как <strong th:text="${currentUsername}">user</strong>
+            <span th:if="${isAdmin}">(администратор)</span>
+        </span>
+        <a href="/logout">Выйти</a>
+    </div>
 
     <form th:action="@{/movies}" method="get" class="filters" th:object="${filter}">
         <div class="filters-row">
@@ -26,29 +33,24 @@
                 Жанр
                 <select th:field="*{genre}">
                     <option value="">--</option>
-                    <option th:each="genre : ${genres}"
-                            th:value="${genre}"
-                            th:text="${genre}"></option>
+                    <option th:each="genre : ${genres}" th:value="${genre}" th:text="${genre}"></option>
                 </select>
             </label>
             <label>
                 MPAA
                 <select th:field="*{mpaaRating}">
                     <option value="">--</option>
-                    <option th:each="rating : ${mpaaRatings}"
-                            th:value="${rating}"
-                            th:text="${rating}"></option>
+                    <option th:each="rating : ${mpaaRatings}" th:value="${rating}" th:text="${rating}"></option>
                 </select>
             </label>
         </div>
         <div class="filters-row">
             <label>
-                Сортировать по
+                Сортировка по
                 <select th:field="*{sortBy}">
                     <option value="">--</option>
-                    <option th:each="option : ${sortOptions}"
-                            th:value="${option.key}"
-                            th:text="${option.value}"></option>
+                    <option th:each="option : ${sortOptions}" th:value="${option.key}" th:text="${option.value}">
+                    </option>
                 </select>
             </label>
             <label>
@@ -70,125 +72,222 @@
         <button type="button" id="createMovieBtn">Добавить фильм</button>
     </div>
 
-    <table>
+    <section class="import-section">
+        <h2>Импорт фильмов из YAML</h2>
+        <p class="note">
+            Импорт выполняется от имени
+            <strong th:text="${currentUsername}">user</strong>
+            <span th:if="${isAdmin}">(администратор)</span>.
+            Файл должен содержать массив <code>movies</code>.
+        </p>
+        <details class="import-help">
+            <summary>Формат файла</summary>
+            <p>
+                Каждый фильм описывается объектом в массиве <code>movies</code>.
+                Для ролей <code>director</code>, <code>screenwriter</code> и <code>operator</code>
+                используется вложенный объект: укажите <code>id</code> существующей персоны
+                либо блок <code>data</code>, чтобы создать новую.
+            </p>
+            <p>
+                Внутри <code>data</code> доступны те же поля, что и в форме создания персоны.
+                Можно указать <code>locationId</code> или передать вложенный блок <code>location</code>,
+                тогда локация создастся автоматически.
+            </p>
+            <pre><code>movies:
+  - name: "Example Movie"
+    coordinates:
+      x: 12.5
+      y: 480
+    oscarsCount: 1
+    budget: 5000000
+    totalBoxOffice: 18.7
+    mpaaRating: "PG_13"
+    goldenPalmCount: 2
+    genre: "DRAMA"
+    director:
+      id: 2
+    screenwriter:
+      data:
+        name: "New Writer"
+        weight: 62.3
+        nationality: "GERMANY"
+        location:
+          name: "Studio A"
+          x: 42.0
+          y: 15.5
+    operator:
+      data:
+        name: "Camera Pro"
+        weight: 70.0
+        nationality: "SPAIN"
+        locationId: 3
+        </code></pre>
+            <p>
+                <!-- Примеры файлов: <code>samples/import/import-set-1.yaml</code> (только существующие люди)
+                и <code>samples/import/import-set-2.yaml</code> (создание новых людей и локаций). -->
+            </p>
+        </details>
+        <form id="movieImportForm" enctype="multipart/form-data">
+            <label>
+                Файл импорта *
+                <input type="file" id="importFile" accept=".yaml,.yml" required>
+            </label>
+            <div class="form-errors" id="importFormErrors" hidden></div>
+            <div class="form-success" id="importFormSuccess" hidden></div>
+            <div class="form-actions">
+                <button type="submit">Запустить импорт</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="import-history">
+        <h2>История импортов</h2>
+        <div class="history-controls">
+            <label class="checkbox-inline" th:if="${isAdmin}">
+                <input type="checkbox" id="historyAdminMode">
+                Показывать все операции
+            </label>
+            <button type="button" id="historyReloadBtn">Обновить</button>
+        </div>
+        <div class="form-errors" id="historyErrors" hidden></div>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Пользователь</th>
+                    <th>Статус</th>
+                    <th>Создан</th>
+                    <th>Завершён</th>
+                    <th>Добавлено</th>
+                    <th>Сообщение</th>
+                </tr>
+            </thead>
+            <tbody id="importHistoryBody">
+                <tr>
+                    <td colspan="7">История пока пуста</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <table class="movies-table">
         <thead>
-        <tr>
-            <th>Название</th>
-            <th>X</th>
-            <th>Y</th>
-            <th>Создан</th>
-            <th>Бюджет</th>
-            <th>Сборы</th>
-            <th>Жанр</th>
-            <th>MPAA</th>
-            <th>Режиссёр</th>
-            <th>Сценарист</th>
-            <th>Оператор</th>
-            <th>Действия</th>
-        </tr>
+            <tr>
+                <th>Название</th>
+                <th>X</th>
+                <th>Y</th>
+                <th>Создан</th>
+                <th>Бюджет</th>
+                <th>Сборы</th>
+                <th>Жанр</th>
+                <th>MPAA</th>
+                <th>Режиссёр</th>
+                <th>Сценарист</th>
+                <th>Оператор</th>
+                <th>Действия</th>
+            </tr>
         </thead>
         <tbody>
-        <tr th:if="${page.isEmpty()}">
-            <td colspan="12">Нет данных</td>
-        </tr>
-        <tr th:each="movie : ${page.content}"
-            th:data-id="${movie.id}">
+            <tr th:if="${page.isEmpty()}">
+                <td colspan="12">Фильмов не найдено.</td>
+            </tr>
+            <tr th:each="movie : ${page.content}" th:data-id="${movie.id}">
 
-            <td th:text="${movie.name}"></td>
-            <td th:text="${movie.coordX}"></td>
-            <td th:text="${movie.coordY}"></td>
+                <td th:text="${movie.name}"></td>
+                <td th:text="${movie.coordX}"></td>
+                <td th:text="${movie.coordY}"></td>
 
-            <td th:text="${movie.creationDate != null ? #dates.format(movie.creationDate, 'dd.MM.yyyy HH:mm') : ''}"></td>
+                <td
+                    th:text="${movie.creationDate != null ? #dates.format(movie.creationDate, 'dd.MM.yyyy HH:mm') : ''}">
+                </td>
 
-            <td th:text="${movie.budget}"></td>
-            <td th:text="${movie.totalBoxOffice}"></td>
-            <td th:text="${movie.genre}"></td>
-            <td th:text="${movie.mpaaRating}"></td>
-            <td th:text="${movie.directorName}"></td>
-            <td th:text="${movie.screenwriterName}"></td>
-            <td th:text="${movie.operatorName}"></td>
-            <td class="actions">
-                <button type="button" class="detailsMovieBtn" th:data-id="${movie.id}">Подробнее</button>
-                <button type="button" class="editMovieBtn" th:data-id="${movie.id}">Изменить</button>
-                <button type="button" class="deleteMovieBtn" th:data-id="${movie.id}">Удалить</button>
-            </td>
-        </tr>
+                <td th:text="${movie.budget}"></td>
+                <td th:text="${movie.totalBoxOffice}"></td>
+                <td th:text="${movie.genre}"></td>
+                <td th:text="${movie.mpaaRating}"></td>
+                <td th:text="${movie.directorName}"></td>
+                <td th:text="${movie.screenwriterName}"></td>
+                <td th:text="${movie.operatorName}"></td>
+                <td class="actions">
+                    <button type="button" class="detailsMovieBtn" th:data-id="${movie.id}">Подробнее</button>
+                    <button type="button" class="editMovieBtn" th:data-id="${movie.id}">Изменить</button>
+                    <button type="button" class="deleteMovieBtn" th:data-id="${movie.id}">Удалить</button>
+                </td>
+            </tr>
         </tbody>
     </table>
 
     <div class="pagination" th:if="${page.totalPages > 1}">
-        <button type="button" th:data-page="${page.number - 1}"
-                th:disabled="${page.first}">Назад</button>
+        <button type="button" th:data-page="${page.number - 1}" th:disabled="${page.first}">Назад</button>
         <span>Страница <span th:text="${page.number + 1}"></span> из
             <span th:text="${page.totalPages}"></span></span>
-        <button type="button" th:data-page="${page.number + 1}"
-                th:disabled="${page.last}">Вперёд</button>
+        <button type="button" th:data-page="${page.number + 1}" th:disabled="${page.last}">Вперёд</button>
     </div>
 
     <dialog id="movieDialog">
         <form id="movieForm" novalidate>
             <h2 id="movieDialogTitle">Фильм</h2>
-            <input type="hidden" name="id" id="movieId">
+            <input type="hidden" id="movieId">
             <div class="form-grid">
                 <label>
                     Название *
-                    <input type="text" name="name" id="movieName" required>
+                    <input type="text" id="movieName" required>
                 </label>
                 <label>
                     Координата X *
-                    <input type="number" name="coordX" id="movieCoordX" step="0.01" required>
+                    <input type="number" id="movieCoordX" step="0.01" required>
                 </label>
                 <label>
                     Координата Y *
-                    <input type="number" name="coordY" id="movieCoordY" step="1" required>
+                    <input type="number" id="movieCoordY" step="1" required>
                 </label>
                 <label>
                     Оскары
-                    <input type="number" name="oscarsCount" id="movieOscarsCount" min="1">
+                    <input type="number" id="movieOscarsCount" min="1" step="1">
                 </label>
                 <label>
                     Бюджет *
-                    <input type="number" name="budget" id="movieBudget" min="1" required>
+                    <input type="number" id="movieBudget" min="1" step="1" required>
                 </label>
                 <label>
                     Сборы *
-                    <input type="number" name="totalBoxOffice" id="movieTotalBoxOffice" step="0.01" min="0.01" required>
+                    <input type="number" id="movieTotalBoxOffice" min="0.01" step="0.01" required>
                 </label>
                 <label>
                     MPAA
-                    <select name="mpaaRating" id="movieMpaaRating">
+                    <select id="movieMpaaRating">
                         <option value="">--</option>
                     </select>
                 </label>
                 <label>
                     Режиссёр
-                    <select name="directorId" id="movieDirectorId">
+                    <select id="movieDirectorId">
                         <option value="">--</option>
                     </select>
                 </label>
                 <label>
                     Сценарист *
-                    <select name="screenwriterId" id="movieScreenwriterId" required>
+                    <select id="movieScreenwriterId" required>
                         <option value="">--</option>
                     </select>
                 </label>
                 <label>
                     Оператор
-                    <select name="operatorId" id="movieOperatorId">
+                    <select id="movieOperatorId">
                         <option value="">--</option>
                     </select>
                 </label>
                 <label>
-                    Длина
-                    <input type="number" name="length" id="movieLength" min="1">
+                    Длина (мин)
+                    <input type="number" id="movieLength" min="1" step="1">
                 </label>
                 <label>
                     Золотые пальмы *
-                    <input type="number" name="goldenPalmCount" id="movieGoldenPalmCount" min="1" required>
+                    <input type="number" id="movieGoldenPalmCount" min="1" step="1" required>
                 </label>
                 <label>
                     Жанр *
-                    <select name="genre" id="movieGenre" required>
+                    <select id="movieGenre" required>
                         <option value="">--</option>
                     </select>
                 </label>
@@ -206,7 +305,7 @@
             <h2 id="movieDetailsTitle">Информация о фильме</h2>
             <div class="details-grid">
                 <section>
-                    <h3>Основные данные</h3>
+                    <h3>Основные сведения</h3>
                     <dl>
                         <dt>Название</dt>
                         <dd id="detailsName"></dd>
@@ -250,14 +349,19 @@
 </section>
 <th:block th:fragment="scripts">
     <script th:inline="javascript">
-    /*<![CDATA[*/
+        /*<![CDATA[*/
         window.MovieConfig = {
-            genres: /*[[${genres}]]*/ [],
-            mpaaRatings: /*[[${mpaaRatings}]]*/ [],
-            persons: /*[[${persons}]]*/ []
+            genres: /*[[${genres}]]*/[],
+            mpaaRatings: /*[[${mpaaRatings}]]*/[],
+            persons: /*[[${persons}]]*/[],
+            currentUser: {
+                username: /*[[${currentUsername}]]*/ 'anonymous',
+                admin: /*[[${isAdmin}]]*/ false
+            }
         };
-    /*]]>*/
+        /*]]>*/
     </script>
-    <script th:src="@{/js/movies.js?v=7}" defer></script>
+    <script th:src="@{/js/movies.js?v=8}" defer></script>
 </th:block>
+
 </html>

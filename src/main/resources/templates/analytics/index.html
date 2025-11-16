@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: layout('Аналитика', ~{::section}, ~{::scripts})}">
+    th:replace="~{layout :: layout('Аналитика', ~{::section}, ~{::scripts})}">
 <section class="analytics">
     <h1>Аналитика фильмов</h1>
 
@@ -11,9 +11,7 @@
                 Жанр
                 <select name="genre" id="genreCountSelect" required>
                     <option value="">--</option>
-                    <option th:each="genre : ${genres}"
-                            th:value="${genre}"
-                            th:text="${genre}"></option>
+                    <option th:each="genre : ${genres}" th:value="${genre}" th:text="${genre}"></option>
                 </select>
             </label>
             <button type="submit">Посчитать</button>
@@ -40,9 +38,7 @@
                 Жанр
                 <select name="genre" id="genreListSelect" required>
                     <option value="">--</option>
-                    <option th:each="genre : ${genres}"
-                            th:value="${genre}"
-                            th:text="${genre}"></option>
+                    <option th:each="genre : ${genres}" th:value="${genre}" th:text="${genre}"></option>
                 </select>
             </label>
             <button type="submit">Показать</button>
@@ -64,12 +60,13 @@
 </section>
 <th:block th:fragment="scripts">
     <script th:inline="javascript">
-    /*<![CDATA[*/
+        /*<![CDATA[*/
         window.MovieAnalyticsConfig = {
-            genres: [[${genres}]]
+            genres: [[${ genres }]]
         };
-    /*]]>*/
+        /*]]>*/
     </script>
     <script th:src="@{/js/analytics.js}" defer></script>
 </th:block>
+
 </html>

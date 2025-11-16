@@ -1,5 +1,6 @@
 package ru.ifmo.movies_app.web;
 
+import java.security.Principal;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,8 +9,10 @@ import java.util.Map;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,7 +23,6 @@ import ru.ifmo.movies_app.domain.MpaaRating;
 import ru.ifmo.movies_app.dto.MovieTableFilter;
 import ru.ifmo.movies_app.service.MovieService;
 import ru.ifmo.movies_app.service.PersonService;
-import org.springframework.util.StringUtils;
 
 @Controller
 @RequestMapping("/movies")
@@ -44,6 +46,8 @@ public class MovieViewController {
     public String list(@ModelAttribute("filter") MovieTableFilter filter,
                        @RequestParam(defaultValue = "0") int page,
                        @RequestParam(defaultValue = "10") int size,
+                       Principal principal,
+                       Authentication authentication,
                        Model model) {
         model.addAttribute("genres", Arrays.asList(MovieGenre.values()));
         model.addAttribute("mpaaRatings", Arrays.asList(MpaaRating.values()));
@@ -52,6 +56,11 @@ public class MovieViewController {
         model.addAttribute("page", movieService.getMovies(filter, pageable));
         model.addAttribute("sortOptions", SORT_OPTION_LABELS.entrySet());
         model.addAttribute("sortDirections", List.of("asc", "desc"));
+        String currentUsername = principal != null ? principal.getName() : "anonymous";
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        model.addAttribute("currentUsername", currentUsername);
+        model.addAttribute("isAdmin", isAdmin);
         return "movies/list";
     }
 
@@ -67,7 +76,7 @@ public class MovieViewController {
 
     private static Map<String, String> createSortOptions() {
         Map<String, String> options = new LinkedHashMap<>();
-        options.put("name", "Название");
+        options.put("name", "Фильм");
         options.put("directorName", "Режиссёр");
         options.put("screenwriterName", "Сценарист");
         options.put("operatorName", "Оператор");
