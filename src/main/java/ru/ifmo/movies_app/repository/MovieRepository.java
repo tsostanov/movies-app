@@ -28,7 +28,8 @@ public interface MovieRepository {
 
     java.util.List<Movie> findByOperator(Person operator);
 
-    boolean existsByNameIgnoreCase(String name, Long excludeId);
-
-    boolean existsByScreenwriterAndGenre(Long screenwriterId, MovieGenre genre, Long excludeId);
+    boolean existsByScreenwriterAndNameAndGenre(Long screenwriterId,
+                                                String name,
+                                                MovieGenre genre,
+                                                Long excludeId);
 }

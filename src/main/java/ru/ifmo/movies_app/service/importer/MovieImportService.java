@@ -19,6 +19,7 @@ import ru.ifmo.movies_app.domain.ImportStatus;
 import ru.ifmo.movies_app.dto.ImportOperationDto;
 import ru.ifmo.movies_app.dto.LocationDto;
 import ru.ifmo.movies_app.dto.MovieFormDto;
+import ru.ifmo.movies_app.dto.PageResponse;
 import ru.ifmo.movies_app.dto.MovieImportRequest;
 import ru.ifmo.movies_app.dto.importer.LocationPayloadDto;
 import ru.ifmo.movies_app.dto.importer.MovieImportDto;
@@ -41,12 +42,12 @@ public class MovieImportService {
     private final TransactionTemplate transactionTemplate;
 
     public MovieImportService(MovieImportParser parser,
-            MovieService movieService,
-            PersonService personService,
-            LocationService locationService,
-            ImportOperationRepository importOperationRepository,
-            Validator validator,
-            PlatformTransactionManager transactionManager) {
+                              MovieService movieService,
+                              PersonService personService,
+                              LocationService locationService,
+                              ImportOperationRepository importOperationRepository,
+                              Validator validator,
+                              PlatformTransactionManager transactionManager) {
         this.parser = parser;
         this.movieService = movieService;
         this.personService = personService;
@@ -83,6 +84,7 @@ public class MovieImportService {
             importOperationRepository.save(operation);
             throw new ImportException(message, e);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             String message = shortenMessage(e.getMessage());
             operation.markFailed(message);
             importOperationRepository.save(operation);
@@ -90,16 +92,24 @@ public class MovieImportService {
         }
     }
 
-    public List<ImportOperationDto> getHistory(String username, boolean adminView) {
+    public PageResponse<ImportOperationDto> getHistory(String username, boolean adminView, int page, int size) {
+        int boundedSize = normalizeSize(size);
+        int safePage = Math.max(page, 0);
+        int offset = safePage * boundedSize;
         List<ImportOperation> operations;
+        long total;
         if (adminView) {
-            operations = importOperationRepository.findAllOrderByCreatedAtDesc();
+            operations = importOperationRepository.findAll(offset, boundedSize);
+            total = importOperationRepository.countAll();
         } else {
-            operations = importOperationRepository.findByUsernameOrderByCreatedAtDesc(requireUsername(username));
+            String owner = requireUsername(username);
+            operations = importOperationRepository.findByUsername(owner, offset, boundedSize);
+            total = importOperationRepository.countByUsername(owner);
         }
-        return operations.stream()
+        List<ImportOperationDto> dtos = operations.stream()
                 .map(this::toDto)
                 .toList();
+        return new PageResponse<>(dtos, safePage, boundedSize, total);
     }
 
     private void validateRequest(MovieImportRequest request) {
@@ -133,7 +143,8 @@ public class MovieImportService {
         target.setTotalBoxOffice(source.getTotalBoxOffice());
         target.setMpaaRating(source.getMpaaRating());
         target.setDirectorId(resolvePerson(source.getDirector(), "режиссёра"));
-        target.setScreenwriterId(requirePerson(source.getScreenwriter(), "сценариста"));
+        PersonPayloadDto screenwriterPayload = source.getScreenwriter();
+        target.setScreenwriterId(requirePerson(screenwriterPayload, "сценариста"));
         target.setOperatorId(resolvePerson(source.getOperator(), "оператора"));
         target.setLength(source.getLength());
         target.setGoldenPalmCount(source.getGoldenPalmCount());
@@ -144,7 +155,7 @@ public class MovieImportService {
     private Long requirePerson(PersonPayloadDto payload, String role) {
         Long personId = resolvePerson(payload, role);
         if (personId == null) {
-            throw new IllegalArgumentException("Для роли " + role + " необходимо указать id или заполнить блок data.");
+            throw new IllegalArgumentException("Для роли " + role + " необходимо указать id или описать человека в данных импорта.");
         }
         return personId;
     }
@@ -157,13 +168,24 @@ public class MovieImportService {
             personService.getPersonById(payload.getId());
             return payload.getId();
         }
-        PersonInlineDto data = payload.getData();
+        PersonInlineDto data = payload.resolveData();
         if (data == null) {
-            throw new IllegalArgumentException("Для роли " + role + " нужно указать id или описать человека во вложенном объекте data.");
+            throw new IllegalArgumentException("Для роли " + role + " нужно указать id или заполнить поля человека.");
         }
+        validatePersonData(data, role);
         Long locationId = resolveLocation(data);
         data.setLocationId(locationId);
         return personService.create(data).getId();
+    }
+
+    private void validatePersonData(PersonInlineDto data, String role) {
+        Set<ConstraintViolation<PersonInlineDto>> violations = validator.validate(data);
+        if (!violations.isEmpty()) {
+            String message = violations.stream()
+                    .map(v -> v.getPropertyPath() + " " + v.getMessage())
+                    .collect(Collectors.joining("; "));
+            throw new IllegalArgumentException("Данные для роли " + role + " содержат ошибки: " + message);
+        }
     }
 
     private Long resolveLocation(PersonInlineDto data) {
@@ -190,6 +212,11 @@ public class MovieImportService {
                 importOperation.getCompletedAt(),
                 importOperation.getAddedCount(),
                 importOperation.getErrorMessage());
+    }
+
+    private int normalizeSize(int requestedSize) {
+        int value = requestedSize <= 0 ? 5 : requestedSize;
+        return Math.min(value, 50);
     }
 
     private String requireUsername(String username) {

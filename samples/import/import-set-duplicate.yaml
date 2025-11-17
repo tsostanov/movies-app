@@ -1,0 +1,49 @@
+# NOTE: replace `screenwriter.id` with an existing person id to trigger duplication
+movies:
+  - name: "Mirage Station"
+    coordinates:
+      x: 45.0
+      y: 120
+    oscarsCount: 1
+    budget: 5000000
+    totalBoxOffice: 20.5
+    mpaaRating: "PG"
+    director:
+      data:
+        name: "Demo Director"
+        weight: 70.0
+        nationality: "GERMANY"
+    screenwriter:
+      id: 1
+    operator:
+      data:
+        name: "Demo Operator"
+        weight: 68.0
+        nationality: "SPAIN"
+    length: 110
+    goldenPalmCount: 2
+    genre: "DRAMA"
+
+  - name: "Mirage Station"
+    coordinates:
+      x: 60.0
+      y: 300
+    oscarsCount: 2
+    budget: 7200000
+    totalBoxOffice: 33.0
+    mpaaRating: "PG_13"
+    director:
+      data:
+        name: "Another Director"
+        weight: 75.0
+        nationality: "SPAIN"
+    screenwriter:
+      id: 1
+    operator:
+      data:
+        name: "Another Operator"
+        weight: 74.0
+        nationality: "THAILAND"
+    length: 118
+    goldenPalmCount: 3
+    genre: "DRAMA"

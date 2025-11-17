@@ -1,0 +1,99 @@
+movies:
+  - name: "Crimson Horizon"
+    coordinates:
+      x: 12.8
+      y: 402
+    oscarsCount: 2
+    budget: 5600000
+    totalBoxOffice: 45.2
+    mpaaRating: "PG_13"
+    director:
+      data:
+        name: "Jace Rowan"
+        weight: 79.0
+        nationality: "SPAIN"
+        eyeColor: "GREEN"
+    screenwriter:
+      data:
+        name: "Marta Lenz"
+        weight: 62.4
+        nationality: "GERMANY"
+        eyeColor: "BLUE"
+        location:
+          name: "Berlin Studio 4"
+          x: 21.5
+          y: 75.0
+    operator:
+      data:
+        name: "Ivan Noor"
+        weight: 71.2
+        nationality: "THAILAND"
+        hairColor: "ORANGE"
+    length: 123
+    goldenPalmCount: 3
+    genre: "DRAMA"
+
+  - name: "Glass Meridian"
+    coordinates:
+      x: -310.0
+      y: 520
+    oscarsCount: 1
+    budget: 9100000
+    totalBoxOffice: 61.7
+    mpaaRating: "R"
+    director:
+      data:
+        name: "Helena Park"
+        weight: 63.5
+        nationality: "GERMANY"
+    screenwriter:
+      data:
+        name: "Ravi Sato"
+        weight: 68.0
+        nationality: "THAILAND"
+        location:
+          name: "Han River Lot"
+          x: -55.2
+          y: 210.0
+    operator:
+      data:
+        name: "Luigi Ferri"
+        weight: 75.8
+        nationality: "SPAIN"
+        eyeColor: "WHITE"
+    length: 109
+    goldenPalmCount: 2
+    genre: "COMEDY"
+
+  - name: "Silent Reef"
+    coordinates:
+      x: 440.5
+      y: 780
+    oscarsCount: 3
+    budget: 3200000
+    totalBoxOffice: 25.0
+    mpaaRating: "PG"
+    director:
+      data:
+        name: "Nikolai Idris"
+        weight: 82.0
+        nationality: "THAILAND"
+        hairColor: "GREEN"
+    screenwriter:
+      data:
+        name: "Iris Bloom"
+        weight: 57.0
+        nationality: "SPAIN"
+        location:
+          name: "Port Azul"
+          x: 440.5
+          y: 785.0
+    operator:
+      data:
+        name: "Mateo Luz"
+        weight: 69.3
+        nationality: "GERMANY"
+        hairColor: "YELLOW"
+    length: 97
+    goldenPalmCount: 1
+    genre: "FANTASY"

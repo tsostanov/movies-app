@@ -43,7 +43,7 @@ movies:
     coordinates:
       x: -600.0
       y: 112
-    oscarsCount: 0
+    oscarsCount: 1
     budget: 3200000
     totalBoxOffice: 9.6
     mpaaRating: "NC_17"

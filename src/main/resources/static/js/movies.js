@@ -53,10 +53,20 @@ const historyAdminToggle = document.getElementById('historyAdminMode');
 const historyErrorsBox = document.getElementById('historyErrors');
 const historyBody = document.getElementById('importHistoryBody');
 const historyReloadButton = document.getElementById('historyReloadBtn');
+const historyPagination = document.getElementById('historyPagination');
+const historyPrevButton = document.getElementById('historyPrevBtn');
+const historyNextButton = document.getElementById('historyNextBtn');
+const historyPageInfo = document.getElementById('historyPageInfo');
 
 const state = {
     mode: 'create',
     currentId: null
+};
+
+const historyState = {
+    page: 0,
+    size: 5,
+    totalPages: 0
 };
 
 function formatDateTime(value) {
@@ -556,18 +566,24 @@ function showHistoryError(message) {
     historyErrorsBox.textContent = message;
 }
 
-function renderHistoryRows(rows) {
+function renderHistoryPage(result) {
     if (!historyBody) {
         return;
     }
+    const rows = result?.content ?? [];
+    historyState.page = result?.page ?? 0;
+    historyState.size = result?.size ?? historyState.size;
+    historyState.totalPages = result?.totalPages ?? 0;
+
     historyBody.replaceChildren();
-    if (!rows || rows.length === 0) {
+    if (!rows.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
         td.colSpan = 7;
-        td.textContent = 'История пока пуста';
+        td.textContent = 'Нет операций для отображения';
         tr.append(td);
         historyBody.append(tr);
+        renderHistoryPagination();
         return;
     }
     rows.forEach((op) => {
@@ -588,6 +604,26 @@ function renderHistoryRows(rows) {
         });
         historyBody.append(tr);
     });
+    renderHistoryPagination();
+}
+
+function renderHistoryPagination() {
+    if (!historyPagination || !historyPageInfo) {
+        return;
+    }
+    const totalPages = historyState.totalPages;
+    if (!totalPages || totalPages <= 1) {
+        historyPagination.hidden = true;
+        return;
+    }
+    historyPagination.hidden = false;
+    historyPageInfo.textContent = (historyState.page + 1) + ' / ' + totalPages;
+    if (historyPrevButton) {
+        historyPrevButton.disabled = historyState.page <= 0;
+    }
+    if (historyNextButton) {
+        historyNextButton.disabled = historyState.page >= totalPages - 1;
+    }
 }
 
 async function loadImportHistory() {
@@ -597,18 +633,22 @@ async function loadImportHistory() {
     const adminMode = Boolean(historyAdminToggle?.checked && userInfo.admin);
     clearHistoryError();
     try {
-        const response = await fetch(`/api/movies/import/history?all=${adminMode}`);
+        const params = new URLSearchParams({
+            all: adminMode,
+            page: historyState.page,
+            size: historyState.size
+        });
+        const response = await fetch('/api/movies/import/history?' + params.toString());
         if (!response.ok) {
             const body = await response.json().catch(() => ({}));
-            throw new Error(body.message || 'Не удалось загрузить историю импортов');
+            throw new Error(body.message || 'Не удалось загрузить историю импорта');
         }
         const data = await response.json();
-        renderHistoryRows(data);
+        renderHistoryPage(data);
     } catch (error) {
         showHistoryError(error.message);
     }
 }
-
 async function submitImportFile(event) {
     event.preventDefault();
     if (!importForm) {
@@ -749,10 +789,32 @@ function init() {
         importForm.addEventListener('submit', submitImportFile);
     }
     if (historyReloadButton) {
-        historyReloadButton.addEventListener('click', () => loadImportHistory());
+        historyReloadButton.addEventListener('click', () => {
+            historyState.page = 0;
+            loadImportHistory();
+        });
     }
     if (historyAdminToggle) {
-        historyAdminToggle.addEventListener('change', () => loadImportHistory());
+        historyAdminToggle.addEventListener('change', () => {
+            historyState.page = 0;
+            loadImportHistory();
+        });
+    }
+    if (historyPrevButton) {
+        historyPrevButton.addEventListener('click', () => {
+            if (historyState.page > 0) {
+                historyState.page -= 1;
+                loadImportHistory();
+            }
+        });
+    }
+    if (historyNextButton) {
+        historyNextButton.addEventListener('click', () => {
+            if (historyState.page < historyState.totalPages - 1) {
+                historyState.page += 1;
+                loadImportHistory();
+            }
+        });
     }
     if (historyBody) {
         loadImportHistory();

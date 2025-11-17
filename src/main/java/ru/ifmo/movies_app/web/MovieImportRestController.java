@@ -1,7 +1,6 @@
 package ru.ifmo.movies_app.web;
 
 import java.security.Principal;
-import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import ru.ifmo.movies_app.dto.ImportOperationDto;
+import ru.ifmo.movies_app.dto.PageResponse;
 import ru.ifmo.movies_app.service.importer.MovieImportService;
 
 @RestController
@@ -33,12 +33,14 @@ public class MovieImportRestController {
     }
 
     @GetMapping("/history")
-    public List<ImportOperationDto> history(@RequestParam(value = "all", defaultValue = "false") boolean all,
-                                            Principal principal,
-                                            Authentication authentication) {
+    public PageResponse<ImportOperationDto> history(@RequestParam(value = "all", defaultValue = "false") boolean all,
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "5") int size,
+                                                    Principal principal,
+                                                    Authentication authentication) {
         boolean adminView = all && authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         String username = principal != null ? principal.getName() : null;
-        return movieImportService.getHistory(username, adminView);
+        return movieImportService.getHistory(username, adminView, page, size);
     }
 }

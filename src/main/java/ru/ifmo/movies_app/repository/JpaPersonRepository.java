@@ -42,6 +42,8 @@ public class JpaPersonRepository implements PersonRepository {
     public Person save(Person person) {
         if (person.getId() == null) {
             entityManager.persist(person);
+            // Ensure generated identifier is available immediately (needed for bulk import)
+            entityManager.flush();
             return person;
         }
         return entityManager.merge(person);

@@ -17,36 +17,26 @@ public class MovieUniquenessValidator {
     }
 
     public void validate(MovieFormDto dto, Long currentId) {
-        String name = dto.getName();
         Long screenwriterId = dto.getScreenwriterId();
-        var genre = dto.getGenre();
-        checkName(name, currentId);
-        checkScreenwriterGenre(screenwriterId, genre, currentId);
+        checkScreenwriterNameAndGenre(screenwriterId, dto.getName(), dto.getGenre(), currentId);
     }
 
     public void validate(Movie movie) {
         Long currentId = movie.getId();
-        checkName(movie.getName(), currentId);
         var screenwriter = movie.getScreenwriter();
-        checkScreenwriterGenre(
-                screenwriter != null ? screenwriter.getId() : null,
-                movie.getGenre(),
-                currentId);
+        Long screenwriterId = screenwriter != null ? screenwriter.getId() : null;
+        checkScreenwriterNameAndGenre(screenwriterId, movie.getName(), movie.getGenre(), currentId);
     }
 
-    private void checkName(String name, Long currentId) {
-        if (name != null && movieRepository.existsByNameIgnoreCase(name, currentId)) {
-            throw new IllegalArgumentException("Фильм с таким названием уже существует");
-        }
-    }
-
-    private void checkScreenwriterGenre(Long screenwriterId,
-                                        MovieGenre genre,
-                                        Long currentId) {
+    private void checkScreenwriterNameAndGenre(Long screenwriterId,
+                                               String name,
+                                               MovieGenre genre,
+                                               Long currentId) {
         if (screenwriterId != null
+                && name != null
                 && genre != null
-                && movieRepository.existsByScreenwriterAndGenre(screenwriterId, genre, currentId)) {
-            throw new IllegalArgumentException("Этот сценарист уже создавал фильм в данном жанре");
+                && movieRepository.existsByScreenwriterAndNameAndGenre(screenwriterId, name, genre, currentId)) {
+            throw new IllegalArgumentException("Этот сценарист уже создал фильм с таким названием в этом жанре");
         }
     }
 }

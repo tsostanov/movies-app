@@ -12,13 +12,10 @@ public class CountryConverter implements AttributeConverter<Country, Object> {
 
     @Override
     public Object convertToDatabaseColumn(Country attribute) {
-        if (attribute == null) {
-            return null;
-        }
         try {
             PGobject pg = new PGobject();
             pg.setType(PG_TYPE);
-            pg.setValue(attribute.name());
+            pg.setValue(attribute != null ? attribute.name() : null);
             return pg;
         } catch (Exception e) {
             throw new IllegalArgumentException("Cannot convert Country to PGobject", e);
@@ -31,7 +28,8 @@ public class CountryConverter implements AttributeConverter<Country, Object> {
             return null;
         }
         if (dbData instanceof PGobject pg) {
-            return Country.valueOf(pg.getValue());
+            String value = pg.getValue();
+            return value != null ? Country.valueOf(value) : null;
         }
         return Country.valueOf(dbData.toString());
     }

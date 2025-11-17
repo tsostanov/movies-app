@@ -23,21 +23,40 @@ public class JpaImportOperationRepository implements ImportOperationRepository {
     }
 
     @Override
-    public List<ImportOperation> findAllOrderByCreatedAtDesc() {
+    public List<ImportOperation> findAll(int offset, int limit) {
         return entityManager.createQuery(
                         "select op from ImportOperation op order by op.createdAt desc",
                         ImportOperation.class)
+                .setFirstResult(Math.max(offset, 0))
+                .setMaxResults(limit)
                 .getResultList();
     }
 
     @Override
-    public List<ImportOperation> findByUsernameOrderByCreatedAtDesc(String username) {
+    public long countAll() {
+        return entityManager.createQuery("select count(op) from ImportOperation op", Long.class)
+                .getSingleResult();
+    }
+
+    @Override
+    public List<ImportOperation> findByUsername(String username, int offset, int limit) {
         return entityManager.createQuery(
                         "select op from ImportOperation op " +
                                 "where op.username = :username order by op.createdAt desc",
                         ImportOperation.class)
                 .setParameter("username", username)
+                .setFirstResult(Math.max(offset, 0))
+                .setMaxResults(limit)
                 .getResultList();
+    }
+
+    @Override
+    public long countByUsername(String username) {
+        return entityManager.createQuery(
+                        "select count(op) from ImportOperation op where op.username = :username",
+                        Long.class)
+                .setParameter("username", username)
+                .getSingleResult();
     }
 
     @Override

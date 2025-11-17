@@ -1,0 +1,100 @@
+movies:
+  - name: "Polar Lights"
+    coordinates:
+      x: -120.4
+      y: 905
+    oscarsCount: 3
+    budget: 18700000
+    totalBoxOffice: 132.0
+    mpaaRating: "PG_13"
+    director:
+      data:
+        name: "Greta Vaughn"
+        weight: 68.9
+        nationality: "GERMANY"
+        eyeColor: "BLUE"
+        hairColor: "WHITE"
+    screenwriter:
+      data:
+        name: "Ren Ito"
+        weight: 61.1
+        nationality: "THAILAND"
+        eyeColor: "GREEN"
+        location:
+          name: "Aurora Deck"
+          x: -130.0
+          y: 910.0
+    operator:
+      data:
+        name: "Boris Kade"
+        weight: 80.5
+        nationality: "SPAIN"
+        hairColor: "YELLOW"
+    length: 142
+    goldenPalmCount: 5
+    genre: "MUSICAL"
+
+  - name: "Sand Chronicle"
+    coordinates:
+      x: 305.0
+      y: 260
+    oscarsCount: 1
+    budget: 6400000
+    totalBoxOffice: 43.8
+    mpaaRating: "PG"
+    director:
+      data:
+        name: "Leo Martins"
+        weight: 77.4
+        nationality: "SPAIN"
+    screenwriter:
+      data:
+        name: "Anya Frost"
+        weight: 59.0
+        nationality: "GERMANY"
+        eyeColor: "GREEN"
+    operator:
+      data:
+        name: "Kai Rivas"
+        weight: 70.2
+        nationality: "THAILAND"
+        location:
+          name: "Dune Station"
+          x: 300.0
+          y: 255.0
+    length: 115
+    goldenPalmCount: 2
+    genre: "DRAMA"
+
+  - name: "Clockwork Harbor"
+    coordinates:
+      x: 88.6
+      y: 540
+    oscarsCount: 0
+    budget: 4200000
+    totalBoxOffice: 28.3
+    mpaaRating: "R"
+    director:
+      data:
+        name: "Irene Doyle"
+        weight: 65.5
+        nationality: "GERMANY"
+        hairColor: "ORANGE"
+    screenwriter:
+      data:
+        name: "Felix Ward"
+        weight: 73.0
+        nationality: "SPAIN"
+        location:
+          name: "Dock Lab 7"
+          x: 92.0
+          y: 545.0
+    operator:
+      data:
+        name: "Noah Cheng"
+        weight: 67.1
+        nationality: "THAILAND"
+        eyeColor: "YELLOW"
+    length: 104
+    goldenPalmCount: 1
+    genre: "COMEDY"

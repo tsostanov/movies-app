@@ -12,13 +12,10 @@ public class ColorConverter implements AttributeConverter<Color, Object> {
 
     @Override
     public Object convertToDatabaseColumn(Color attribute) {
-        if (attribute == null) {
-            return null;
-        }
         try {
             PGobject pg = new PGobject();
             pg.setType(PG_TYPE);
-            pg.setValue(attribute.name());
+            pg.setValue(attribute != null ? attribute.name() : null);
             return pg;
         } catch (Exception e) {
             throw new IllegalArgumentException("Cannot convert Color to PGobject", e);
@@ -31,9 +28,10 @@ public class ColorConverter implements AttributeConverter<Color, Object> {
             return null;
         }
         if (dbData instanceof PGobject pg) {
-            return Color.valueOf(pg.getValue());
+            String value = pg.getValue();
+            return value != null ? Color.valueOf(value) : null;
         }
-        // на всякий случай, если драйвер вернул строку
+        // В теории могут прилетать простые строки, обрабатываем их как enum name
         return Color.valueOf(dbData.toString());
     }
 }

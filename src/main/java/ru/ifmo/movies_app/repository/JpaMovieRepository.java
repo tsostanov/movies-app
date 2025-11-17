@@ -206,36 +206,23 @@ public class JpaMovieRepository implements MovieRepository {
     }
 
     @Override
-    public boolean existsByNameIgnoreCase(String name, Long excludeId) {
-        if (name == null) {
+    public boolean existsByScreenwriterAndNameAndGenre(Long screenwriterId,
+                                                       String name,
+                                                       MovieGenre genre,
+                                                       Long excludeId) {
+        if (screenwriterId == null || name == null || genre == null) {
             return false;
         }
         String normalized = name.trim().toLowerCase(Locale.ROOT);
-        StringBuilder jpql = new StringBuilder("select count(m) from Movie m where lower(m.name) = :name");
-        if (excludeId != null) {
-            jpql.append(" and m.id <> :excludeId");
-        }
-        var query = entityManager.createQuery(jpql.toString(), Long.class)
-                .setParameter("name", normalized);
-        if (excludeId != null) {
-            query.setParameter("excludeId", excludeId);
-        }
-        Long count = query.getSingleResult();
-        return count != null && count > 0;
-    }
-
-    @Override
-    public boolean existsByScreenwriterAndGenre(Long screenwriterId, MovieGenre genre, Long excludeId) {
-        if (screenwriterId == null || genre == null) {
-            return false;
-        }
         StringBuilder jpql = new StringBuilder(
-                "select count(m) from Movie m where m.screenwriter.id = :screenwriterId and m.genre = :genre");
+                "select count(m) from Movie m where m.screenwriter.id = :screenwriterId"
+                        + " and lower(m.name) = :name and m.genre = :genre");
         if (excludeId != null) {
             jpql.append(" and m.id <> :excludeId");
         }
         var query = entityManager.createQuery(jpql.toString(), Long.class)
                 .setParameter("screenwriterId", screenwriterId)
+                .setParameter("name", normalized)
                 .setParameter("genre", genre);
         if (excludeId != null) {
             query.setParameter("excludeId", excludeId);

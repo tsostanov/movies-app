@@ -11,7 +11,11 @@ public interface ImportOperationRepository {
 
     Optional<ImportOperation> findById(Long id);
 
-    List<ImportOperation> findAllOrderByCreatedAtDesc();
+    List<ImportOperation> findAll(int offset, int limit);
 
-    List<ImportOperation> findByUsernameOrderByCreatedAtDesc(String username);
+    long countAll();
+
+    List<ImportOperation> findByUsername(String username, int offset, int limit);
+
+    long countByUsername(String username);
 }
