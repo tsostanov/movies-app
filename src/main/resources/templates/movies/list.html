@@ -9,6 +9,14 @@
             <span th:if="${isAdmin}">(администратор)</span>
         </span>
         <a href="/logout">Выйти</a>
+        <div class="role-switch">
+            <label for="roleSelect">Роль для тестов (локальная):</label>
+            <select id="roleSelect">
+                <option value="USER">Пользователь</option>
+                <option value="ADMIN">Администратор</option>
+            </select>
+            <span class="note">Меняет отображение истории импорта без реальной авторизации.</span>
+        </div>
     </div>
 
     <form th:action="@{/movies}" method="get" class="filters" th:object="${filter}">

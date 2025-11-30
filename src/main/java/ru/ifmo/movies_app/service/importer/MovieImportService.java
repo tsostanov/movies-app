@@ -221,7 +221,7 @@ public class MovieImportService {
 
     private String requireUsername(String username) {
         if (username == null || username.isBlank()) {
-            throw new IllegalArgumentException("Не удалось определить пользователя для операции импорта.");
+            return "anonymous";
         }
         return username;
     }

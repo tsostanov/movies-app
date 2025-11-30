@@ -38,8 +38,8 @@ public class MovieImportRestController {
                                                     @RequestParam(defaultValue = "5") int size,
                                                     Principal principal,
                                                     Authentication authentication) {
-        boolean adminView = all && authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        boolean adminView = all && (authentication == null || authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())));
         String username = principal != null ? principal.getName() : null;
         return movieImportService.getHistory(username, adminView, page, size);
     }

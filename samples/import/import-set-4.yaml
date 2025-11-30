@@ -70,7 +70,7 @@ movies:
     coordinates:
       x: 88.6
       y: 540
-    oscarsCount: 0
+    oscarsCount: 3
     budget: 4200000
     totalBoxOffice: 28.3
     mpaaRating: "R"

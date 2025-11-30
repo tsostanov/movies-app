@@ -1,5 +1,17 @@
 const config = window.MovieConfig ?? { genres: [], mpaaRatings: [], persons: [], currentUser: null };
 const userInfo = config.currentUser ?? { username: null, admin: false };
+const roleSelect = document.getElementById('roleSelect');
+const ROLE_STORAGE_KEY = 'demoRole';
+function loadSavedRole() {
+    try {
+        const stored = localStorage.getItem(ROLE_STORAGE_KEY);
+        return stored === 'ADMIN' ? 'ADMIN' : 'USER';
+    } catch (error) {
+        return 'USER';
+    }
+}
+let currentRole = loadSavedRole();
+userInfo.admin = currentRole === 'ADMIN';
 
 const dialog = document.getElementById('movieDialog');
 const form = document.getElementById('movieForm');
@@ -68,6 +80,27 @@ const historyState = {
     size: 5,
     totalPages: 0
 };
+
+function applyRoleToUi() {
+    if (roleSelect) {
+        roleSelect.value = currentRole;
+    }
+    if (historyAdminToggle) {
+        historyAdminToggle.checked = currentRole === 'ADMIN';
+    }
+}
+
+function setRole(role) {
+    currentRole = role === 'ADMIN' ? 'ADMIN' : 'USER';
+    try {
+        localStorage.setItem(ROLE_STORAGE_KEY, currentRole);
+    } catch (error) {
+        // ignore storage errors in private mode
+    }
+    userInfo.admin = currentRole === 'ADMIN';
+    applyRoleToUi();
+    loadImportHistory();
+}
 
 function formatDateTime(value) {
     if (!value) {
@@ -630,7 +663,7 @@ async function loadImportHistory() {
     if (!historyBody) {
         return;
     }
-    const adminMode = Boolean(historyAdminToggle?.checked && userInfo.admin);
+    const adminMode = currentRole === 'ADMIN';
     clearHistoryError();
     try {
         const params = new URLSearchParams({
@@ -762,6 +795,7 @@ function handleTableClick(event) {
 }
 
 function init() {
+    applyRoleToUi();
     if (createButton) {
         createButton.addEventListener('click', () => openCreateDialog());
     }
@@ -788,6 +822,9 @@ function init() {
     if (importForm) {
         importForm.addEventListener('submit', submitImportFile);
     }
+    if (roleSelect) {
+        roleSelect.addEventListener('change', (event) => setRole(event.target.value));
+    }
     if (historyReloadButton) {
         historyReloadButton.addEventListener('click', () => {
             historyState.page = 0;
@@ -796,8 +833,9 @@ function init() {
     }
     if (historyAdminToggle) {
         historyAdminToggle.addEventListener('change', () => {
+            const role = historyAdminToggle.checked ? 'ADMIN' : 'USER';
+            setRole(role);
             historyState.page = 0;
-            loadImportHistory();
         });
     }
     if (historyPrevButton) {
