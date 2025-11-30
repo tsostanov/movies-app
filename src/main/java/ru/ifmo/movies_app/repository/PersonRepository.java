@@ -13,6 +13,8 @@ public interface PersonRepository {
 
     Optional<Person> findById(Long id);
 
+    Optional<Person> findByNameIgnoreCase(String name);
+
     Person save(Person person);
 
     void delete(Person person);

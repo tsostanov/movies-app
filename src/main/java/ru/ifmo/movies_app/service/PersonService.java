@@ -55,6 +55,11 @@ public class PersonService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<Person> findByName(String name) {
+        return personRepository.findByNameIgnoreCase(name);
+    }
+
+    @Transactional(readOnly = true)
     public PersonFormDto getForm(Long id) {
         Person person = getPersonById(id);
         PersonFormDto dto = new PersonFormDto();

@@ -38,6 +38,20 @@ public class JpaPersonRepository implements PersonRepository {
     }
 
     @Override
+    public Optional<Person> findByNameIgnoreCase(String name) {
+        if (name == null) {
+            return Optional.empty();
+        }
+        return entityManager.createQuery(
+                        "select p from Person p where lower(p.name) = :name",
+                        Person.class)
+                .setParameter("name", name.trim().toLowerCase())
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
+    }
+
+    @Override
     @Transactional
     public Person save(Person person) {
         if (person.getId() == null) {

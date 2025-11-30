@@ -3,6 +3,7 @@ package ru.ifmo.movies_app.service.importer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import ru.ifmo.movies_app.domain.ImportOperation;
 import ru.ifmo.movies_app.domain.ImportStatus;
+import ru.ifmo.movies_app.domain.Person;
 import ru.ifmo.movies_app.dto.ImportOperationDto;
 import ru.ifmo.movies_app.dto.LocationDto;
 import ru.ifmo.movies_app.dto.MovieFormDto;
@@ -173,6 +175,10 @@ public class MovieImportService {
             throw new IllegalArgumentException("Для роли " + role + " нужно указать id или заполнить поля человека.");
         }
         validatePersonData(data, role);
+        Optional<Person> existing = personService.findByName(data.getName());
+        if (existing.isPresent()) {
+            return existing.get().getId();
+        }
         Long locationId = resolveLocation(data);
         data.setLocationId(locationId);
         return personService.create(data).getId();
