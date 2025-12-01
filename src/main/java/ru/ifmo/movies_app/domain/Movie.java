@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
@@ -28,7 +29,9 @@ import ru.ifmo.movies_app.converter.MovieGenreConverter;
 import ru.ifmo.movies_app.converter.MpaaRatingConverter;
 
 @Entity
-@Table(name = "movies")
+@Table(name = "movies", uniqueConstraints = @UniqueConstraint(
+        name = "uk_movies_screenwriter_name_genre",
+        columnNames = {"screenwriter_id", "name", "genre"}))
 public class Movie {
 
     @Id
