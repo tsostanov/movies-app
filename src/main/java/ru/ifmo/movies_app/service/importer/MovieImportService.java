@@ -76,7 +76,7 @@ public class MovieImportService {
 
     public ImportOperationDto importYaml(MultipartFile file, String username) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("ýøü> ?>‘? ñ?õ?‘?‘'ø ?ç õç‘?ç?ø?.");
+            throw new IllegalArgumentException("Файл для импорта не передан.");
         }
         byte[] content = readBytes(file);
         String owner = requireUsername(username);
@@ -148,7 +148,7 @@ public class MovieImportService {
         ImportOperation operation = importOperationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Import operation %d not found".formatted(id)));
         if (!operation.hasFile()) {
-            throw new IllegalStateException("?‘?ó ??ç??ø ?>‘? +>?óøú ñ?õ?‘?‘'");
+            throw new IllegalStateException("Файл для этой операции ещё не готов для скачивания.");
         }
         String filename = normalizeFilename(operation.getOriginalFilename(), operation.getTxId());
         String contentType = operation.getFileContentType() != null
@@ -158,7 +158,7 @@ public class MovieImportService {
             InputStream stream = objectStorage.getObject(operation.getFileKey());
             return new ImportFileResource(stream, filename, contentType);
         } catch (Exception ex) {
-            throw new ImportException("?ç ‘??ø>?‘?‘? >øç?øø ñ?õ?‘?‘'", ex);
+            throw new ImportException("Не удалось получить файл из хранилища", ex);
         }
     }
 
@@ -188,7 +188,7 @@ public class MovieImportService {
             String message = violations.stream()
                     .map(v -> v.getPropertyPath() + " " + v.getMessage())
                     .collect(Collectors.joining("; "));
-            throw new IllegalArgumentException("?çó?‘?‘?çó‘'?ø‘? ‘?‘'‘?‘?ó‘'‘?‘?ø ‘\"øü>ø ñ?õ?‘?‘'ø: " + message);
+            throw new IllegalArgumentException("Некорректная структура файла импорта: " + message);
         }
     }
 
@@ -199,8 +199,8 @@ public class MovieImportService {
                     .map(v -> v.getPropertyPath() + " " + v.getMessage())
                     .collect(Collectors.joining("; "));
             throw new IllegalArgumentException(
-                    "ýñ>‘?? \"" + (dto.getName() != null ? dto.getName() : "+çú ?øú?ø?ñ‘?")
-                            + "\" ‘???ç‘?ñ‘' ?‘?ñ+óñ: " + message);
+                    "Фильм \"" + (dto.getName() != null ? dto.getName() : "без названия")
+                            + "\" содержит ошибки: " + message);
         }
     }
 
@@ -212,10 +212,10 @@ public class MovieImportService {
         target.setBudget(source.getBudget());
         target.setTotalBoxOffice(source.getTotalBoxOffice());
         target.setMpaaRating(source.getMpaaRating());
-        target.setDirectorId(resolvePerson(source.getDirector(), "‘?çñ‘?‘?‘'‘?ø"));
+        target.setDirectorId(resolvePerson(source.getDirector(), "режиссёра"));
         PersonPayloadDto screenwriterPayload = source.getScreenwriter();
-        target.setScreenwriterId(requirePerson(screenwriterPayload, "‘?‘Åç?ø‘?ñ‘?‘'ø"));
-        target.setOperatorId(resolvePerson(source.getOperator(), "?õç‘?ø‘'?‘?ø"));
+        target.setScreenwriterId(requirePerson(screenwriterPayload, "сценариста"));
+        target.setOperatorId(resolvePerson(source.getOperator(), "оператора"));
         target.setLength(source.getLength());
         target.setGoldenPalmCount(source.getGoldenPalmCount());
         target.setGenre(source.getGenre());
@@ -225,7 +225,7 @@ public class MovieImportService {
     private Long requirePerson(PersonPayloadDto payload, String role) {
         Long personId = resolvePerson(payload, role);
         if (personId == null) {
-            throw new IllegalArgumentException("\">‘? ‘??>ñ " + role + " ?ç?+‘:??ñ?? ‘?óøúø‘'‘? id ñ>ñ ?õñ‘?ø‘'‘? ‘Øç>??çóø ? ?ø??‘<‘: ñ?õ?‘?‘'ø.");
+            throw new IllegalArgumentException("Для роли " + role + " необходимо указать id или описать человека в данных импорта.");
         }
         return personId;
     }
@@ -240,7 +240,7 @@ public class MovieImportService {
         }
         PersonInlineDto data = payload.resolveData();
         if (data == null) {
-            throw new IllegalArgumentException("\">‘? ‘??>ñ " + role + " ?‘??? ‘?óøúø‘'‘? id ñ>ñ úøõ?>?ñ‘'‘? õ?>‘? ‘Øç>??çóø.");
+            throw new IllegalArgumentException("Для роли " + role + " нужно указать id или заполнить поля человека.");
         }
         validatePersonData(data, role);
         Optional<Person> existing = personService.findByName(data.getName());
@@ -258,7 +258,7 @@ public class MovieImportService {
             String message = violations.stream()
                     .map(v -> v.getPropertyPath() + " " + v.getMessage())
                     .collect(Collectors.joining("; "));
-            throw new IllegalArgumentException("\"ø??‘<ç ?>‘? ‘??>ñ " + role + " ‘???ç‘?ø‘' ?‘?ñ+óñ: " + message);
+            throw new IllegalArgumentException("Данные для роли " + role + " содержат ошибки: " + message);
         }
     }
 
@@ -313,7 +313,7 @@ public class MovieImportService {
         try {
             return file.getBytes();
         } catch (IOException ex) {
-            throw new ImportException("?ç ‘??ø>?‘?‘? ?çó??ñ?? ñ?õ?‘?‘'ø", ex);
+            throw new ImportException("Не удалось прочитать содержимое файла импорта", ex);
         }
     }
 
