@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +53,7 @@ public class PersonService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "persons", key = "#id")
     public Person getPersonById(Long id) {
         return personRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Персона %d не найдена".formatted(id)));
@@ -74,6 +79,10 @@ public class PersonService {
     }
 
     @Transactional
+    @Caching(
+            put = @CachePut(cacheNames = "persons", key = "#result.id", condition = "#result != null"),
+            evict = @CacheEvict(cacheNames = "movies", allEntries = true)
+    )
     public Person create(PersonCreateRequest dto) {
         Person person = new Person();
         applyDto(dto, person);
@@ -81,6 +90,10 @@ public class PersonService {
     }
 
     @Transactional
+    @Caching(
+            put = @CachePut(cacheNames = "persons", key = "#id"),
+            evict = @CacheEvict(cacheNames = "movies", allEntries = true)
+    )
     public Person update(Long id, PersonFormDto dto) {
         Person person = getPersonById(id);
         applyDto(dto, person);
@@ -88,6 +101,10 @@ public class PersonService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "persons", key = "#id"),
+            @CacheEvict(cacheNames = "movies", allEntries = true)
+    })
     public void delete(Long id, PersonReassignmentDto reassignment) {
         Person person = getPersonById(id);
         reassignMovies(person, reassignment);

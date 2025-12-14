@@ -13,6 +13,8 @@ public class ImportOperationDto {
     private final OffsetDateTime completedAt;
     private final Integer addedCount;
     private final String errorMessage;
+    private final String originalFilename;
+    private final boolean fileAvailable;
 
     public ImportOperationDto(Long id,
                               String username,
@@ -20,7 +22,9 @@ public class ImportOperationDto {
                               OffsetDateTime createdAt,
                               OffsetDateTime completedAt,
                               Integer addedCount,
-                              String errorMessage) {
+                              String errorMessage,
+                              String originalFilename,
+                              boolean fileAvailable) {
         this.id = id;
         this.username = username;
         this.status = status;
@@ -28,6 +32,8 @@ public class ImportOperationDto {
         this.completedAt = completedAt;
         this.addedCount = addedCount;
         this.errorMessage = errorMessage;
+        this.originalFilename = originalFilename;
+        this.fileAvailable = fileAvailable;
     }
 
     public Long getId() {
@@ -56,5 +62,13 @@ public class ImportOperationDto {
 
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    public String getOriginalFilename() {
+        return originalFilename;
+    }
+
+    public boolean isFileAvailable() {
+        return fileAvailable;
     }
 }

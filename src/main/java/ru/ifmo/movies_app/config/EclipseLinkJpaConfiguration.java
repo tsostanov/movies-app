@@ -1,6 +1,7 @@
 package ru.ifmo.movies_app.config;
 
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.SharedCacheMode;
 import javax.sql.DataSource;
 
 import org.eclipse.persistence.jpa.PersistenceProvider;
@@ -25,6 +26,7 @@ public class EclipseLinkJpaConfiguration {
         emf.setDataSource(dataSource);
         emf.setPersistenceProviderClass(PersistenceProvider.class);
         emf.setPackagesToScan("ru.ifmo.movies_app");
+        emf.setSharedCacheMode(SharedCacheMode.ENABLE_SELECTIVE);
 
         Map<String, Object> props = new HashMap<>();
         props.put("jakarta.persistence.schema-generation.database.action", "none");

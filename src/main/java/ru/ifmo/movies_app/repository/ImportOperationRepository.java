@@ -13,6 +13,8 @@ public interface ImportOperationRepository {
 
     List<ImportOperation> findAll(int offset, int limit);
 
+    List<ImportOperation> findPendingFileCommits(int limit);
+
     long countAll();
 
     List<ImportOperation> findByUsername(String username, int offset, int limit);

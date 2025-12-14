@@ -1,5 +1,6 @@
 package ru.ifmo.movies_app.domain;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -14,10 +15,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+import org.eclipse.persistence.annotations.Cache;
+import org.eclipse.persistence.annotations.CacheType;
+
 import ru.ifmo.movies_app.converter.ColorConverter;
 import ru.ifmo.movies_app.converter.CountryConverter;
 
 @Entity
+@Cacheable
+@Cache(type = CacheType.SOFT, size = 1000, expiry = 3600000)
 @Table(name = "persons")
 public class Person {
 

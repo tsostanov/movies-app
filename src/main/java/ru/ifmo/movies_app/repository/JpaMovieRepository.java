@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,11 +38,13 @@ public class JpaMovieRepository implements MovieRepository {
     private EntityManager entityManager;
 
     @Override
+    @Cacheable(cacheNames = "movies", key = "#id")
     public Optional<Movie> findById(Long id) {
         return Optional.ofNullable(entityManager.find(Movie.class, id));
     }
 
     @Override
+    @Cacheable(cacheNames = "movies", key = "#id")
     public Optional<Movie> findByIdWithRelations(Long id) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Movie> query = cb.createQuery(Movie.class);
@@ -166,6 +171,7 @@ public class JpaMovieRepository implements MovieRepository {
 
     @Override
     @Transactional
+    @CachePut(cacheNames = "movies", key = "#result.id", condition = "#result != null && #result.id != null")
     public Movie save(Movie movie) {
         if (movie.getId() == null) {
             entityManager.persist(movie);
@@ -176,6 +182,7 @@ public class JpaMovieRepository implements MovieRepository {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "movies", key = "#movie.id", condition = "#movie != null && #movie.id != null")
     public void delete(Movie movie) {
         Movie managed = entityManager.contains(movie) ? movie : entityManager.merge(movie);
         entityManager.remove(managed);

@@ -1,5 +1,6 @@
 package ru.ifmo.movies_app.domain;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
@@ -25,10 +26,15 @@ import jakarta.validation.constraints.Positive;
 
 import java.util.Date;
 
+import org.eclipse.persistence.annotations.Cache;
+import org.eclipse.persistence.annotations.CacheType;
+
 import ru.ifmo.movies_app.converter.MovieGenreConverter;
 import ru.ifmo.movies_app.converter.MpaaRatingConverter;
 
 @Entity
+@Cacheable
+@Cache(type = CacheType.WEAK, size = 2000, expiry = 1800000)
 @Table(name = "movies", uniqueConstraints = @UniqueConstraint(
         name = "uk_movies_screenwriter_name_genre",
         columnNames = {"screenwriter_id", "name", "genre"}))

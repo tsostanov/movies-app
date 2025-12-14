@@ -1,5 +1,6 @@
 package ru.ifmo.movies_app.domain;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,7 +11,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import org.eclipse.persistence.annotations.Cache;
+import org.eclipse.persistence.annotations.CacheType;
+
 @Entity
+@Cacheable
+@Cache(type = CacheType.SOFT, size = 1000, expiry = 3600000)
 @Table(name = "locations")
 public class Location {
 

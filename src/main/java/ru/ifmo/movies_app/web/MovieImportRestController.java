@@ -2,9 +2,13 @@ package ru.ifmo.movies_app.web;
 
 import java.security.Principal;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,5 +46,14 @@ public class MovieImportRestController {
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority())));
         String username = principal != null ? principal.getName() : null;
         return movieImportService.getHistory(username, adminView, page, size);
+    }
+
+    @GetMapping("/{id}/file")
+    public ResponseEntity<InputStreamResource> download(@PathVariable("id") Long id) {
+        var file = movieImportService.loadImportFile(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.filename() + "\"")
+                .contentType(MediaType.parseMediaType(file.contentType()))
+                .body(new InputStreamResource(file.stream()));
     }
 }

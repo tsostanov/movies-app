@@ -1,4 +1,4 @@
-const config = window.MovieConfig ?? { genres: [], mpaaRatings: [], persons: [], currentUser: null };
+﻿const config = window.MovieConfig ?? { genres: [], mpaaRatings: [], persons: [], currentUser: null };
 const userInfo = config.currentUser ?? { username: null, admin: false };
 const roleSelect = document.getElementById('roleSelect');
 const ROLE_STORAGE_KEY = 'demoRole';
@@ -612,7 +612,7 @@ function renderHistoryPage(result) {
     if (!rows.length) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = 7;
+        td.colSpan = 8;
         td.textContent = 'Нет операций для отображения';
         tr.append(td);
         historyBody.append(tr);
@@ -635,6 +635,17 @@ function renderHistoryPage(result) {
             td.textContent = value;
             tr.append(td);
         });
+        const fileCell = document.createElement('td');
+        if (op.fileAvailable) {
+            const link = document.createElement('a');
+            link.href = `/api/movies/import/${op.id}/file`;
+            link.textContent = op.originalFilename || 'download';
+            link.download = '';
+            fileCell.append(link);
+        } else {
+            fileCell.textContent = '-';
+        }
+        tr.append(fileCell);
         historyBody.append(tr);
     });
     renderHistoryPagination();

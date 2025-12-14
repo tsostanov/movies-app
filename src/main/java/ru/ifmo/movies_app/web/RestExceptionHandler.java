@@ -37,6 +37,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(ErrorResponse.message(ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.message(ex.getMessage()));
+    }
+
     @ExceptionHandler(ImportException.class)
     public ResponseEntity<ErrorResponse> handleImportException(ImportException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
