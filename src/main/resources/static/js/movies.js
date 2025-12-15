@@ -354,9 +354,9 @@ function openEditDialog(id) {
     if (!dialog) {
         return;
     }
+    resetForm();
     state.mode = 'edit';
     state.currentId = id;
-    resetForm();
     ensureFormOptions();
     document.getElementById('movieDialogTitle').textContent = 'Изменение фильма';
     submitButton.disabled = true;

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: layout('Админ-панель', ~{::section}, ~{::scripts})}">
+<section class="admin-page">
+    <h1>Админ-панель</h1>
+
+    <div class="card">
+        <h2>Логирование L2 Cache</h2>
+        <div class="actions">
+            <button id="cacheOnBtn" type="button">Включить логирование</button>
+            <button id="cacheOffBtn" type="button">Выключить логирование</button>
+        </div>
+        <p class="hint">Включает/выключает вывод hits/misses в логах приложения.</p>
+    </div>
+
+    <div class="card">
+        <h2>Фейлпоинт импорта</h2>
+        <label for="failpointSelect">Состояние:</label>
+        <select id="failpointSelect">
+            <option value="NONE">NONE (выключить)</option>
+            <option value="AFTER_FILE_UPLOAD">AFTER_FILE_UPLOAD</option>
+            <option value="AFTER_DB_COMMIT">AFTER_DB_COMMIT</option>
+        </select>
+        <button id="setFailpointBtn" type="button">Применить</button>
+    </div>
+
+    <div class="card">
+        <h2>Recovery зависших импортов</h2>
+        <label for="recoverLimit">Лимит записей:</label>
+        <input id="recoverLimit" type="number" min="1" value="50">
+        <button id="recoverBtn" type="button">Запустить recover</button>
+        <p class="hint">Переносит PENDING_FILE_COMMIT в SUCCESS и удаляет staging-файлы.</p>
+    </div>
+
+    <div id="adminMessage" class="message" hidden></div>
+</section>
+
+<th:block th:fragment="scripts">
+    <script th:src="@{/js/admin.js}"></script>
+</th:block>
+
+</html>
