@@ -33,7 +33,7 @@ Movies App - учебное веб-приложение для ведения к
 
 ## Быстрый старт
 
-Нужны Java 17, PostgreSQL и Maven Wrapper из репозитория. На Windows команды ниже можно запускать из PowerShell.
+Нужны Java 17, Docker для тестов с Testcontainers, PostgreSQL для локального запуска и Maven Wrapper из репозитория. На Windows команды ниже можно запускать из PowerShell.
 
 ```powershell
 .\mvnw.cmd test
@@ -68,14 +68,16 @@ http://localhost:8082
 
 ## База данных
 
-Текущая конфигурация лежит в `src/main/resources/application.properties`.
+Базовая конфигурация лежит в `src/main/resources/application.properties`. Секреты не хранятся в репозитории: реальные параметры подключения передаются через переменные окружения или через локальный файл `application-local.properties` в корне проекта либо `src/main/resources/application-local.properties`. Оба варианта игнорируются git и автоматически подхватываются при запуске.
 
-По умолчанию приложение ожидает PostgreSQL здесь:
+По умолчанию приложение ожидает локальную PostgreSQL здесь:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:15432/studs
+spring.datasource.url=jdbc:postgresql://localhost:5432/movies
+spring.datasource.username=movies
+spring.datasource.password=movies
 server.port=8082
-spring.flyway.enabled=false
+spring.flyway.enabled=true
 ```
 
 Если у вас другая база, удобнее переопределить настройки при запуске:
@@ -85,13 +87,23 @@ spring.flyway.enabled=false
   "-Dspring-boot.run.arguments=--spring.datasource.url=jdbc:postgresql://localhost:5432/movies --spring.datasource.username=postgres --spring.datasource.password=postgres"
 ```
 
+Или через переменные окружения:
+
+```powershell
+$env:DB_URL = "jdbc:postgresql://localhost:5432/movies"
+$env:DB_USERNAME = "postgres"
+$env:DB_PASSWORD = "postgres"
+.\mvnw.cmd spring-boot:run
+```
+
 Схема БД описана в SQL-файлах:
 
 - `src/main/resources/db/migration/V1__init.sql` - enum-типы, таблицы `locations`, `persons`, `movies`, индексы;
 - `src/main/resources/db/migration/V2__import_operations.sql` - таблица истории импортов;
-- `src/main/resources/db/migration/V2__functions.sql` - функции для аналитики.
+- `src/main/resources/db/migration/V3__functions.sql` - функции для аналитики;
+- `src/main/resources/db/migration/V4__movie_uniqueness.sql` - уникальный индекс `screenwriter + lower(name) + genre`.
 
-В текущем профиле Flyway выключен, поэтому SQL нужно применить к базе вручную. Если решите включать Flyway, сначала разнесите две миграции `V2__...` по разным версиям, иначе Flyway увидит конфликт версий.
+Flyway включен по умолчанию и применяет миграции при старте приложения.
 
 ## Модель данных
 
@@ -214,7 +226,7 @@ movies:
 .\mvnw.cmd test
 ```
 
-В тестах сейчас есть проверка загрузки контекста Spring Boot, конвертеров PostgreSQL enum-типов и валидатора уникальности фильмов. Для теста контекста нужны рабочие настройки PostgreSQL, потому что приложение поднимается почти как в обычном запуске.
+В тестах сейчас есть проверка загрузки контекста Spring Boot, конвертеров PostgreSQL enum-типов и валидатора уникальности фильмов. Тест контекста поднимает PostgreSQL через Testcontainers и прогоняет Flyway-миграции. Если Docker недоступен, этот интеграционный тест пропускается.
 
 ## Полезные файлы
 

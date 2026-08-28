@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -32,6 +34,8 @@ import ru.ifmo.movies_app.service.PersonService;
 
 @Service
 public class MovieImportService {
+
+    private static final Logger log = LoggerFactory.getLogger(MovieImportService.class);
 
     private final MovieImportParser parser;
     private final MovieService movieService;
@@ -84,8 +88,8 @@ public class MovieImportService {
             importOperationRepository.save(operation);
             throw new ImportException(message, e);
         } catch (RuntimeException e) {
-            e.printStackTrace();
             String message = shortenMessage(e.getMessage());
+            log.warn("Movie import failed for user {}: {}", owner, message, e);
             operation.markFailed(message);
             importOperationRepository.save(operation);
             throw new ImportException(message, e);

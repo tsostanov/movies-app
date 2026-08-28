@@ -30,6 +30,8 @@ public class MovieViewController {
 
     private static final List<String> ALLOWED_SORTS = List.of(
             "name", "directorName", "screenwriterName", "operatorName", "genre", "mpaaRating");
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private static final Map<String, String> SORT_OPTION_LABELS = createSortOptions();
 
@@ -65,13 +67,22 @@ public class MovieViewController {
     }
 
     private Pageable createPageRequest(MovieTableFilter filter, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = normalizeSize(size);
         String sortBy = filter.getSortBy();
         if (!StringUtils.hasText(sortBy) || !ALLOWED_SORTS.contains(sortBy)) {
-            return PageRequest.of(page, size);
+            return PageRequest.of(safePage, safeSize);
         }
         String sortDirection = filter.getSortDirection();
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        return PageRequest.of(page, size, Sort.by(direction, sortBy));
+        return PageRequest.of(safePage, safeSize, Sort.by(direction, sortBy));
+    }
+
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 
     private static Map<String, String> createSortOptions() {

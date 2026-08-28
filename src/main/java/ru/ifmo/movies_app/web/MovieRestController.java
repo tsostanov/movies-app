@@ -33,6 +33,8 @@ public class MovieRestController {
 
     private static final List<String> ALLOWED_SORTS = List.of(
             "name", "directorName", "screenwriterName", "operatorName", "genre", "mpaaRating");
+    private static final int DEFAULT_PAGE_SIZE = 10;
+    private static final int MAX_PAGE_SIZE = 100;
 
     private final MovieService movieService;
 
@@ -78,12 +80,21 @@ public class MovieRestController {
     }
 
     private Pageable buildPageable(int page, int size, String sort, String direction) {
+        int safePage = Math.max(page, 0);
+        int safeSize = normalizeSize(size);
         if (sort == null || !ALLOWED_SORTS.contains(sort)) {
-            return PageRequest.of(page, size);
+            return PageRequest.of(safePage, safeSize);
         }
         Sort.Order order = new Sort.Order(
                 "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC,
                 sort);
-        return PageRequest.of(page, size, Sort.by(order));
+        return PageRequest.of(safePage, safeSize, Sort.by(order));
+    }
+
+    private int normalizeSize(int size) {
+        if (size <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(size, MAX_PAGE_SIZE);
     }
 }
