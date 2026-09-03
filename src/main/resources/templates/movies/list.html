@@ -2,7 +2,21 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org"
     th:replace="~{layout :: layout('Фильмы', ~{::section}, ~{::scripts})}">
 <section class="movies-page">
-    <h1>Фильмы</h1>
+    <div class="page-heading">
+        <div>
+            <h1>Фильмы</h1>
+        </div>
+        <div class="page-stats" aria-label="Сводка по таблице фильмов">
+            <span>
+                <strong th:text="${page.totalElements}">0</strong>
+                записей
+            </span>
+            <span th:if="${page.totalPages > 0}">
+                Страница <strong th:text="${page.number + 1}">1</strong>
+                из <strong th:text="${page.totalPages}">1</strong>
+            </span>
+        </div>
+    </div>
 
     <div class="auth-info">
         <span>Вы вошли как <strong th:text="${currentUsername}">user</strong>
@@ -65,6 +79,7 @@
         <div class="filters-actions">
             <button type="submit" name="action" value="filter">Применить фильтр</button>
             <button type="submit" name="action" value="sort">Применить сортировку</button>
+            <a class="button secondary" th:href="@{/movies}">Сбросить</a>
         </div>
     </form>
 
@@ -131,11 +146,12 @@
             <label>
                 Файл импорта *
                 <input type="file" id="importFile" accept=".yaml,.yml" required>
+                <span class="field-hint" id="importFileMeta">Файл не выбран</span>
             </label>
             <div class="form-errors" id="importFormErrors" hidden></div>
             <div class="form-success" id="importFormSuccess" hidden></div>
             <div class="form-actions">
-                <button type="submit">Запустить импорт</button>
+                <button type="submit" id="importSubmitBtn">Запустить импорт</button>
             </div>
         </form>
     </section>
@@ -150,7 +166,8 @@
             <button type="button" id="historyReloadBtn">Обновить</button>
         </div>
         <div class="form-errors" id="historyErrors" hidden></div>
-        <table class="history-table">
+        <div class="table-wrap">
+            <table class="history-table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -167,7 +184,8 @@
                     <td colspan="7">История пока пуста</td>
                 </tr>
             </tbody>
-        </table>
+            </table>
+        </div>
         <div class="history-pagination" id="historyPagination" hidden>
             <button type="button" id="historyPrevBtn">Предыдущие</button>
             <span id="historyPageInfo"></span>
@@ -175,52 +193,54 @@
         </div>
     </section>
 
-    <table class="movies-table">
-        <thead>
-            <tr>
-                <th>Название</th>
-                <th>X</th>
-                <th>Y</th>
-                <th>Создан</th>
-                <th>Бюджет</th>
-                <th>Сборы</th>
-                <th>Жанр</th>
-                <th>MPAA</th>
-                <th>Режиссёр</th>
-                <th>Сценарист</th>
-                <th>Оператор</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:if="${page.isEmpty()}">
-                <td colspan="12">Фильмов не найдено.</td>
-            </tr>
-            <tr th:each="movie : ${page.content}" th:data-id="${movie.id}">
+    <div class="table-wrap">
+        <table class="movies-table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>X</th>
+                    <th>Y</th>
+                    <th>Создан</th>
+                    <th>Бюджет</th>
+                    <th>Сборы</th>
+                    <th>Жанр</th>
+                    <th>MPAA</th>
+                    <th>Режиссёр</th>
+                    <th>Сценарист</th>
+                    <th>Оператор</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${page.isEmpty()}">
+                    <td colspan="12" class="empty-state">Фильмов не найдено. Измените фильтр или добавьте новый фильм.</td>
+                </tr>
+                <tr th:each="movie : ${page.content}" th:data-id="${movie.id}">
 
-                <td th:text="${movie.name}"></td>
-                <td th:text="${movie.coordX}"></td>
-                <td th:text="${movie.coordY}"></td>
+                    <td th:text="${movie.name}"></td>
+                    <td th:text="${movie.coordX}"></td>
+                    <td th:text="${movie.coordY}"></td>
 
-                <td
-                    th:text="${movie.creationDate != null ? #dates.format(movie.creationDate, 'dd.MM.yyyy HH:mm') : ''}">
-                </td>
+                    <td
+                        th:text="${movie.creationDate != null ? #dates.format(movie.creationDate, 'dd.MM.yyyy HH:mm') : ''}">
+                    </td>
 
-                <td th:text="${movie.budget}"></td>
-                <td th:text="${movie.totalBoxOffice}"></td>
-                <td th:text="${movie.genre}"></td>
-                <td th:text="${movie.mpaaRating}"></td>
-                <td th:text="${movie.directorName}"></td>
-                <td th:text="${movie.screenwriterName}"></td>
-                <td th:text="${movie.operatorName}"></td>
-                <td class="actions">
-                    <button type="button" class="detailsMovieBtn" th:data-id="${movie.id}">Подробнее</button>
-                    <button type="button" class="editMovieBtn" th:data-id="${movie.id}">Изменить</button>
-                    <button type="button" class="deleteMovieBtn" th:data-id="${movie.id}">Удалить</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                    <td th:text="${movie.budget}"></td>
+                    <td th:text="${movie.totalBoxOffice}"></td>
+                    <td th:text="${movie.genre}"></td>
+                    <td th:text="${movie.mpaaRating}"></td>
+                    <td th:text="${movie.directorName}"></td>
+                    <td th:text="${movie.screenwriterName}"></td>
+                    <td th:text="${movie.operatorName}"></td>
+                    <td class="actions">
+                        <button type="button" class="detailsMovieBtn" th:data-id="${movie.id}">Подробнее</button>
+                        <button type="button" class="editMovieBtn" th:data-id="${movie.id}">Изменить</button>
+                        <button type="button" class="deleteMovieBtn danger" th:data-id="${movie.id}">Удалить</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <div class="pagination" th:if="${page.totalPages > 1}">
         <button type="button" th:data-page="${page.number - 1}" th:disabled="${page.first}">Назад</button>
@@ -366,7 +386,7 @@
         };
         /*]]>*/
     </script>
-    <script th:src="@{/js/movies.js?v=8}" defer></script>
+    <script th:src="@{/js/movies.js?v=9}" defer></script>
 </th:block>
 
 </html>

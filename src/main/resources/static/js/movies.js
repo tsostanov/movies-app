@@ -48,6 +48,8 @@ const importForm = document.getElementById('movieImportForm');
 const importFileInput = document.getElementById('importFile');
 const importErrorsBox = document.getElementById('importFormErrors');
 const importSuccessBox = document.getElementById('importFormSuccess');
+const importSubmitButton = document.getElementById('importSubmitBtn');
+const importFileMeta = document.getElementById('importFileMeta');
 
 const historyAdminToggle = document.getElementById('historyAdminMode');
 const historyErrorsBox = document.getElementById('historyErrors');
@@ -524,6 +526,38 @@ function clearImportMessages() {
     }
 }
 
+function setImportBusy(isBusy) {
+    if (!importSubmitButton) {
+        return;
+    }
+    importSubmitButton.disabled = isBusy;
+    importSubmitButton.textContent = isBusy ? 'Импорт выполняется...' : 'Запустить импорт';
+    if (importForm) {
+        importForm.setAttribute('aria-busy', String(isBusy));
+    }
+}
+
+function formatFileSize(bytes) {
+    if (!Number.isFinite(bytes)) {
+        return '';
+    }
+    if (bytes < 1024) {
+        return `${bytes} байт`;
+    }
+    if (bytes < 1024 * 1024) {
+        return `${(bytes / 1024).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} КБ`;
+    }
+    return `${(bytes / (1024 * 1024)).toLocaleString('ru-RU', { maximumFractionDigits: 1 })} МБ`;
+}
+
+function updateImportFileMeta() {
+    if (!importFileMeta) {
+        return;
+    }
+    const file = importFileInput?.files?.[0];
+    importFileMeta.textContent = file ? `${file.name}, ${formatFileSize(file.size)}` : 'Файл не выбран';
+}
+
 function showImportError(message) {
     if (!importErrorsBox) {
         showAlert(message);
@@ -564,6 +598,19 @@ function showHistoryError(message) {
     }
     historyErrorsBox.hidden = false;
     historyErrorsBox.textContent = message;
+}
+
+function renderHistoryLoading() {
+    if (!historyBody) {
+        return;
+    }
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 7;
+    td.className = 'is-loading';
+    td.textContent = 'Загружаем историю импорта...';
+    tr.append(td);
+    historyBody.replaceChildren(tr);
 }
 
 function renderHistoryPage(result) {
@@ -632,6 +679,7 @@ async function loadImportHistory() {
     }
     const adminMode = Boolean(historyAdminToggle?.checked && userInfo.admin);
     clearHistoryError();
+    renderHistoryLoading();
     try {
         const params = new URLSearchParams({
             all: adminMode,
@@ -661,6 +709,7 @@ async function submitImportFile(event) {
     }
     const formData = new FormData();
     formData.append('file', importFileInput.files[0]);
+    setImportBusy(true);
     try {
         const response = await fetch('/api/movies/import', {
             method: 'POST',
@@ -676,9 +725,12 @@ async function submitImportFile(event) {
             : `Операция #${body.id} завершилась со статусом ${body.status}`;
         showImportSuccess(statusText);
         importForm.reset();
+        updateImportFileMeta();
         await loadImportHistory();
     } catch (error) {
         showImportError(error.message);
+    } finally {
+        setImportBusy(false);
     }
 }
 
@@ -746,7 +798,9 @@ function handleTableClick(event) {
         if (Number.isNaN(movieId)) {
             return;
         }
-        if (window.confirm('Удалить фильм?')) {
+        const row = deleteButton.closest('tr');
+        const name = row?.querySelector('td')?.textContent?.trim() || `#${movieId}`;
+        if (window.confirm(`Удалить фильм «${name}»?`)) {
             fetch(`/api/movies/${movieId}`, { method: 'DELETE' })
                 .then((response) => {
                     if (!response.ok) {
@@ -787,6 +841,10 @@ function init() {
     }
     if (importForm) {
         importForm.addEventListener('submit', submitImportFile);
+    }
+    if (importFileInput) {
+        importFileInput.addEventListener('change', updateImportFileMeta);
+        updateImportFileMeta();
     }
     if (historyReloadButton) {
         historyReloadButton.addEventListener('click', () => {
