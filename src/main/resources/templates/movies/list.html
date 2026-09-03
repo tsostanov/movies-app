@@ -85,6 +85,7 @@
 
     <div class="actions">
         <button type="button" id="createMovieBtn">Добавить фильм</button>
+        <a class="button secondary" id="exportCsvBtn" th:href="@{/api/movies/export.csv}">Скачать CSV</a>
     </div>
 
     <section class="import-section">
@@ -386,7 +387,7 @@
         };
         /*]]>*/
     </script>
-    <script th:src="@{/js/movies.js?v=9}" defer></script>
+    <script th:src="@{/js/movies.js?v=10}" defer></script>
 </th:block>
 
 </html>

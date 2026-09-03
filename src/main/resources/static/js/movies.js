@@ -6,6 +6,7 @@ const form = document.getElementById('movieForm');
 const errorBox = document.getElementById('movieFormErrors');
 const cancelButton = document.getElementById('movieDialogCancel');
 const createButton = document.getElementById('createMovieBtn');
+const exportCsvButton = document.getElementById('exportCsvBtn');
 const submitButton = document.getElementById('movieDialogSubmit');
 const pagination = document.querySelector('.pagination');
 const table = document.querySelector('.movies-table tbody');
@@ -526,6 +527,18 @@ function clearImportMessages() {
     }
 }
 
+function setupCsvExport() {
+    if (!exportCsvButton) {
+        return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    params.delete('page');
+    params.delete('size');
+    params.delete('action');
+    const query = params.toString();
+    exportCsvButton.href = query ? `/api/movies/export.csv?${query}` : '/api/movies/export.csv';
+}
+
 function setImportBusy(isBusy) {
     if (!importSubmitButton) {
         return;
@@ -880,6 +893,7 @@ function init() {
     ensureFormOptions();
     toggleSubmitAvailability();
     setupPagination();
+    setupCsvExport();
     setupWebSocket();
 }
 
