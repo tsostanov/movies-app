@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import ru.ifmo.movies_app.dto.ImportOperationDto;
+import ru.ifmo.movies_app.dto.MovieImportPreviewDto;
 import ru.ifmo.movies_app.dto.PageResponse;
 import ru.ifmo.movies_app.service.importer.MovieImportService;
 
@@ -30,6 +31,11 @@ public class MovieImportRestController {
                                            Principal principal) {
         String username = principal != null ? principal.getName() : null;
         return movieImportService.importYaml(file, username);
+    }
+
+    @PostMapping(value = "/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public MovieImportPreviewDto preview(@RequestParam("file") MultipartFile file) {
+        return movieImportService.previewYaml(file);
     }
 
     @GetMapping("/history")

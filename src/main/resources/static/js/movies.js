@@ -50,7 +50,9 @@ const importFileInput = document.getElementById('importFile');
 const importErrorsBox = document.getElementById('importFormErrors');
 const importSuccessBox = document.getElementById('importFormSuccess');
 const importSubmitButton = document.getElementById('importSubmitBtn');
+const importPreviewButton = document.getElementById('importPreviewBtn');
 const importFileMeta = document.getElementById('importFileMeta');
+const importPreviewBox = document.getElementById('importPreview');
 
 const historyAdminToggle = document.getElementById('historyAdminMode');
 const historyErrorsBox = document.getElementById('historyErrors');
@@ -527,6 +529,14 @@ function clearImportMessages() {
     }
 }
 
+function clearImportPreview() {
+    if (!importPreviewBox) {
+        return;
+    }
+    importPreviewBox.hidden = true;
+    importPreviewBox.replaceChildren();
+}
+
 function setupCsvExport() {
     if (!exportCsvButton) {
         return;
@@ -550,6 +560,14 @@ function setImportBusy(isBusy) {
     }
 }
 
+function setPreviewBusy(isBusy) {
+    if (!importPreviewButton) {
+        return;
+    }
+    importPreviewButton.disabled = isBusy;
+    importPreviewButton.textContent = isBusy ? 'Проверяем...' : 'Проверить файл';
+}
+
 function formatFileSize(bytes) {
     if (!Number.isFinite(bytes)) {
         return '';
@@ -569,6 +587,7 @@ function updateImportFileMeta() {
     }
     const file = importFileInput?.files?.[0];
     importFileMeta.textContent = file ? `${file.name}, ${formatFileSize(file.size)}` : 'Файл не выбран';
+    clearImportPreview();
 }
 
 function showImportError(message) {
@@ -611,6 +630,67 @@ function showHistoryError(message) {
     }
     historyErrorsBox.hidden = false;
     historyErrorsBox.textContent = message;
+}
+
+function renderImportPreview(preview) {
+    if (!importPreviewBox) {
+        return;
+    }
+    const total = preview?.totalCount ?? 0;
+    const rows = preview?.movies ?? [];
+    const title = document.createElement('strong');
+    title.textContent = `Файл распознан: фильмов ${total}`;
+    importPreviewBox.replaceChildren(title);
+
+    if (rows.length > 0) {
+        const list = document.createElement('ol');
+        rows.forEach((movie) => {
+            const item = document.createElement('li');
+            const roles = [
+                movie.director ? `режиссёр: ${movie.director}` : null,
+                movie.screenwriter ? `сценарист: ${movie.screenwriter}` : null,
+                movie.operator ? `оператор: ${movie.operator}` : null
+            ].filter(Boolean).join('; ');
+            item.textContent = `${movie.name ?? 'Без названия'} (${movie.genre ?? 'жанр не указан'})${roles ? ` — ${roles}` : ''}`;
+            list.append(item);
+        });
+        importPreviewBox.append(list);
+    }
+
+    if (total > rows.length) {
+        const note = document.createElement('p');
+        note.className = 'note';
+        note.textContent = `Показаны первые ${rows.length} из ${total}.`;
+        importPreviewBox.append(note);
+    }
+    importPreviewBox.hidden = false;
+}
+
+async function previewImportFile() {
+    clearImportMessages();
+    clearImportPreview();
+    if (!importFileInput?.files?.length) {
+        showImportError('Выберите YAML-файл для проверки');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file', importFileInput.files[0]);
+    setPreviewBusy(true);
+    try {
+        const response = await fetch('/api/movies/import/preview', {
+            method: 'POST',
+            body: formData
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(body.message || 'Не удалось проверить файл импорта');
+        }
+        renderImportPreview(body);
+    } catch (error) {
+        showImportError(error.message);
+    } finally {
+        setPreviewBusy(false);
+    }
 }
 
 function renderHistoryLoading() {
@@ -739,6 +819,7 @@ async function submitImportFile(event) {
         showImportSuccess(statusText);
         importForm.reset();
         updateImportFileMeta();
+        clearImportPreview();
         await loadImportHistory();
     } catch (error) {
         showImportError(error.message);
@@ -854,6 +935,9 @@ function init() {
     }
     if (importForm) {
         importForm.addEventListener('submit', submitImportFile);
+    }
+    if (importPreviewButton) {
+        importPreviewButton.addEventListener('click', previewImportFile);
     }
     if (importFileInput) {
         importFileInput.addEventListener('change', updateImportFileMeta);

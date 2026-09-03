@@ -392,6 +392,23 @@ td.actions {
     color: var(--success);
 }
 
+.import-preview {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+}
+
+.import-preview ol {
+    margin: 0.6rem 0 0;
+    padding-left: 1.35rem;
+}
+
+.import-preview li + li {
+    margin-top: 0.35rem;
+}
+
 dialog {
     width: min(920px, calc(100vw - 2rem));
     max-height: calc(100vh - 2rem);

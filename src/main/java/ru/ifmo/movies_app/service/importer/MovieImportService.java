@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -21,6 +22,8 @@ import ru.ifmo.movies_app.domain.ImportStatus;
 import ru.ifmo.movies_app.dto.ImportOperationDto;
 import ru.ifmo.movies_app.dto.LocationDto;
 import ru.ifmo.movies_app.dto.MovieFormDto;
+import ru.ifmo.movies_app.dto.MovieImportPreviewDto;
+import ru.ifmo.movies_app.dto.MovieImportPreviewRowDto;
 import ru.ifmo.movies_app.dto.PageResponse;
 import ru.ifmo.movies_app.dto.MovieImportRequest;
 import ru.ifmo.movies_app.dto.importer.LocationPayloadDto;
@@ -96,6 +99,25 @@ public class MovieImportService {
         }
     }
 
+    public MovieImportPreviewDto previewYaml(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Файл для предпросмотра не передан.");
+        }
+        try (InputStream stream = file.getInputStream()) {
+            MovieImportRequest request = parser.parse(stream);
+            validateRequest(request);
+            List<MovieImportDto> movies = request.getMovies();
+            List<MovieImportPreviewRowDto> rows = IntStream.range(0, Math.min(movies.size(), 20))
+                    .mapToObj(index -> toPreviewRow(index + 1, movies.get(index)))
+                    .toList();
+            return new MovieImportPreviewDto(movies.size(), rows);
+        } catch (IOException e) {
+            throw new ImportException("Не удалось прочитать YAML-файл.", e);
+        } catch (RuntimeException e) {
+            throw new ImportException(shortenMessage(e.getMessage()), e);
+        }
+    }
+
     public PageResponse<ImportOperationDto> getHistory(String username, boolean adminView, int page, int size) {
         int boundedSize = normalizeSize(size);
         int safePage = Math.max(page, 0);
@@ -154,6 +176,31 @@ public class MovieImportService {
         target.setGoldenPalmCount(source.getGoldenPalmCount());
         target.setGenre(source.getGenre());
         return target;
+    }
+
+    private MovieImportPreviewRowDto toPreviewRow(int rowNumber, MovieImportDto movie) {
+        return new MovieImportPreviewRowDto(
+                rowNumber,
+                movie.getName(),
+                movie.getGenre(),
+                movie.getMpaaRating(),
+                describePerson(movie.getDirector()),
+                describePerson(movie.getScreenwriter()),
+                describePerson(movie.getOperator()));
+    }
+
+    private String describePerson(PersonPayloadDto payload) {
+        if (payload == null) {
+            return "—";
+        }
+        if (payload.getId() != null) {
+            return "ID " + payload.getId();
+        }
+        PersonInlineDto data = payload.resolveData();
+        if (data == null || data.getName() == null || data.getName().isBlank()) {
+            return "новая персона";
+        }
+        return "новая персона: " + data.getName();
     }
 
     private Long requirePerson(PersonPayloadDto payload, String role) {

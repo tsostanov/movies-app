@@ -151,7 +151,9 @@
             </label>
             <div class="form-errors" id="importFormErrors" hidden></div>
             <div class="form-success" id="importFormSuccess" hidden></div>
+            <div class="import-preview" id="importPreview" hidden></div>
             <div class="form-actions">
+                <button type="button" class="secondary" id="importPreviewBtn">Проверить файл</button>
                 <button type="submit" id="importSubmitBtn">Запустить импорт</button>
             </div>
         </form>
@@ -387,7 +389,7 @@
         };
         /*]]>*/
     </script>
-    <script th:src="@{/js/movies.js?v=10}" defer></script>
+    <script th:src="@{/js/movies.js?v=11}" defer></script>
 </th:block>
 
 </html>
