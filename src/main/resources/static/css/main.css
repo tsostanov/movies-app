@@ -445,6 +445,95 @@ dd {
     color: var(--muted);
 }
 
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.dashboard-card {
+    display: flex;
+    min-height: 145px;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.dashboard-card:hover,
+.dashboard-card:focus-visible {
+    border-color: var(--brand);
+    box-shadow: 0 10px 30px rgb(15 118 110 / 12%);
+}
+
+.dashboard-label,
+.dashboard-action {
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.dashboard-card strong {
+    font-size: 2.35rem;
+    line-height: 1;
+}
+
+.home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.section-heading h2 {
+    margin-bottom: 0;
+}
+
+.section-heading a {
+    color: var(--brand-dark);
+    font-weight: 700;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.7rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.status-pill.success {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.status-pill.failed {
+    background: var(--danger-bg);
+    color: var(--danger);
+}
+
+.status-pill.in_progress {
+    background: #eef4ff;
+    color: #3538cd;
+}
+
 @media (max-width: 760px) {
     .site-header,
     .page-heading {

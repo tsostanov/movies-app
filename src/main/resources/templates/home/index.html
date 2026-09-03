@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: layout('Главная', ~{::section}, ~{::scripts})}">
+<section class="home-page">
+    <div class="page-heading">
+        <div>
+            <h1>Movies App</h1>
+        </div>
+        <div class="page-stats">
+            <span>
+                <strong th:text="${currentUsername}">user</strong>
+                <span th:text="${isAdmin ? 'администратор' : 'пользователь'}">пользователь</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <a class="dashboard-card" th:href="@{/movies}">
+            <span class="dashboard-label">Фильмы</span>
+            <strong th:text="${movieCount}">0</strong>
+            <span class="dashboard-action">Открыть каталог</span>
+        </a>
+        <a class="dashboard-card" th:href="@{/persons}">
+            <span class="dashboard-label">Персоны</span>
+            <strong th:text="${personCount}">0</strong>
+            <span class="dashboard-action">Управлять командой</span>
+        </a>
+        <a class="dashboard-card" th:href="@{/locations}">
+            <span class="dashboard-label">Локации</span>
+            <strong th:text="${locationCount}">0</strong>
+            <span class="dashboard-action">Открыть справочник</span>
+        </a>
+        <a class="dashboard-card" th:href="@{/movies}">
+            <span class="dashboard-label">Импорты</span>
+            <strong th:text="${importCount}">0</strong>
+            <span class="dashboard-action">Перейти к YAML</span>
+        </a>
+    </div>
+
+    <div class="home-actions">
+        <a class="button" th:href="@{/movies}">Добавить или импортировать фильмы</a>
+        <a class="button secondary" th:href="@{/analytics}">Открыть аналитику</a>
+    </div>
+
+    <section class="recent-imports">
+        <div class="section-heading">
+            <h2>Последние импорты</h2>
+            <a th:href="@{/movies}">Все операции</a>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Пользователь</th>
+                        <th>Статус</th>
+                        <th>Создан</th>
+                        <th>Добавлено</th>
+                        <th>Сообщение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${recentImports.isEmpty()}">
+                        <td colspan="6" class="empty-state">Импортов пока нет.</td>
+                    </tr>
+                    <tr th:each="operation : ${recentImports}">
+                        <td th:text="${operation.id}">1</td>
+                        <td th:text="${operation.username}">user</td>
+                        <td>
+                            <span class="status-pill" th:classappend="${operation.status.name().toLowerCase()}"
+                                th:text="${operation.status}">SUCCESS</span>
+                        </td>
+                        <td th:text="${operation.createdAt}">2026-09-03</td>
+                        <td th:text="${operation.addedCount != null ? operation.addedCount : '—'}">0</td>
+                        <td th:text="${operation.errorMessage != null ? operation.errorMessage : '—'}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+<th:block th:fragment="scripts"></th:block>
+
+</html>
