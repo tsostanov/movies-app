@@ -31,6 +31,7 @@ The Spring context test is marked with `@Testcontainers(disabledWithoutDocker = 
 - API validation response shape
 - Structured `400` responses for malformed JSON and invalid query parameters
 - Analytics search guardrails for blank and overly long substrings
+- Request correlation id generation, propagation, and MDC cleanup
 - Import rollback on failed movie creation
 - Import operation status transitions
 - CSV escaping for commas, quotes, and line breaks
