@@ -29,6 +29,7 @@ The Spring context test is marked with `@Testcontainers(disabledWithoutDocker = 
 - Positive and negative service paths
 - Boundary values for paging and export size
 - API validation response shape
+- Structured `400` responses for malformed JSON and invalid query parameters
 - Analytics search guardrails for blank and overly long substrings
 - Import rollback on failed movie creation
 - Import operation status transitions

@@ -54,6 +54,15 @@ class RestExceptionHandlerMvcTest {
     }
 
     @Test
+    void malformedJsonReturnsStructuredBadRequest() throws Exception {
+        mockMvc.perform(post("/api/locations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Malformed request body"));
+    }
+
+    @Test
     void notFoundExceptionReturns404WithServiceMessage() throws Exception {
         when(locationService.getById(404L)).thenThrow(new NotFoundException("location missing"));
 

@@ -3,14 +3,18 @@ package ru.ifmo.movies_app.web;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -60,6 +64,41 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
             details.put(error.getField(), error.getDefaultMessage());
         }
         ErrorResponse response = ErrorResponse.withDetails("Данные не проходят проверку", details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex,
+                                                                         HttpHeaders headers,
+                                                                         HttpStatusCode status,
+                                                                         WebRequest request) {
+        Map<String, String> details = new LinkedHashMap<>();
+        details.put(ex.getParameterName(), "Required request parameter is missing");
+        ErrorResponse response = ErrorResponse.withDetails("Request parameters are invalid", details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(TypeMismatchException ex,
+                                                       HttpHeaders headers,
+                                                       HttpStatusCode status,
+                                                       WebRequest request) {
+        Map<String, String> details = new LinkedHashMap<>();
+        if (ex instanceof MethodArgumentTypeMismatchException mismatch) {
+            details.put(mismatch.getName(), "Invalid value: " + mismatch.getValue());
+        } else {
+            details.put("value", "Invalid value");
+        }
+        ErrorResponse response = ErrorResponse.withDetails("Request parameters are invalid", details);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+                                                                  HttpHeaders headers,
+                                                                  HttpStatusCode status,
+                                                                  WebRequest request) {
+        ErrorResponse response = ErrorResponse.message("Malformed request body");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 

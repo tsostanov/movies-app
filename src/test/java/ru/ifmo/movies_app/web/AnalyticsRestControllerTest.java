@@ -41,6 +41,22 @@ class AnalyticsRestControllerTest {
     }
 
     @Test
+    void nameSearchReturnsStructuredBadRequestWhenSubstringIsMissing() throws Exception {
+        mockMvc.perform(get("/api/analytics/name-search"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request parameters are invalid"))
+                .andExpect(jsonPath("$.details.substring").value("Required request parameter is missing"));
+    }
+
+    @Test
+    void genreCountReturnsStructuredBadRequestWhenGenreCannotBeParsed() throws Exception {
+        mockMvc.perform(get("/api/analytics/genre-count").param("genre", "NOT_A_GENRE"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request parameters are invalid"))
+                .andExpect(jsonPath("$.details.genre").value("Invalid value: NOT_A_GENRE"));
+    }
+
+    @Test
     void nameSearchReturnsRowsFromService() throws Exception {
         when(movieAnalyticsService.findMoviesWithNameContaining("Solar"))
                 .thenReturn(List.of(new MovieTableRowDto(
