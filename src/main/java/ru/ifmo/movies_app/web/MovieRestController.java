@@ -7,9 +7,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -34,6 +32,7 @@ import ru.ifmo.movies_app.dto.MovieTableFilter;
 import ru.ifmo.movies_app.dto.MovieTableRowDto;
 import ru.ifmo.movies_app.service.MovieCsvExportService;
 import ru.ifmo.movies_app.service.MovieService;
+import ru.ifmo.movies_app.service.PaginationSupport;
 
 @RestController
 @RequestMapping("/api/movies")
@@ -106,22 +105,14 @@ public class MovieRestController {
     }
 
     private Pageable buildPageable(int page, int size, String sort, String direction) {
-        int safePage = Math.max(page, 0);
-        int safeSize = normalizeSize(size);
-        if (sort == null || !ALLOWED_SORTS.contains(sort)) {
-            return PageRequest.of(safePage, safeSize);
-        }
-        Sort.Order order = new Sort.Order(
-                "desc".equalsIgnoreCase(direction) ? Sort.Direction.DESC : Sort.Direction.ASC,
-                sort);
-        return PageRequest.of(safePage, safeSize, Sort.by(order));
-    }
-
-    private int normalizeSize(int size) {
-        if (size <= 0) {
-            return DEFAULT_PAGE_SIZE;
-        }
-        return Math.min(size, MAX_PAGE_SIZE);
+        return PaginationSupport.createPageable(
+                page,
+                size,
+                sort,
+                direction,
+                ALLOWED_SORTS,
+                DEFAULT_PAGE_SIZE,
+                MAX_PAGE_SIZE);
     }
 
     private void applyRestSortParameters(MovieTableFilter filter, String sort, String direction) {

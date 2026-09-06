@@ -6,13 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +19,7 @@ import ru.ifmo.movies_app.domain.MovieGenre;
 import ru.ifmo.movies_app.domain.MpaaRating;
 import ru.ifmo.movies_app.dto.MovieTableFilter;
 import ru.ifmo.movies_app.service.MovieService;
+import ru.ifmo.movies_app.service.PaginationSupport;
 import ru.ifmo.movies_app.service.PersonService;
 
 @Controller
@@ -67,22 +65,14 @@ public class MovieViewController {
     }
 
     private Pageable createPageRequest(MovieTableFilter filter, int page, int size) {
-        int safePage = Math.max(page, 0);
-        int safeSize = normalizeSize(size);
-        String sortBy = filter.getSortBy();
-        if (!StringUtils.hasText(sortBy) || !ALLOWED_SORTS.contains(sortBy)) {
-            return PageRequest.of(safePage, safeSize);
-        }
-        String sortDirection = filter.getSortDirection();
-        Sort.Direction direction = "desc".equalsIgnoreCase(sortDirection) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        return PageRequest.of(safePage, safeSize, Sort.by(direction, sortBy));
-    }
-
-    private int normalizeSize(int size) {
-        if (size <= 0) {
-            return DEFAULT_PAGE_SIZE;
-        }
-        return Math.min(size, MAX_PAGE_SIZE);
+        return PaginationSupport.createPageable(
+                page,
+                size,
+                filter.getSortBy(),
+                filter.getSortDirection(),
+                ALLOWED_SORTS,
+                DEFAULT_PAGE_SIZE,
+                MAX_PAGE_SIZE);
     }
 
     private static Map<String, String> createSortOptions() {

@@ -33,6 +33,7 @@ import ru.ifmo.movies_app.dto.importer.PersonPayloadDto.PersonInlineDto;
 import ru.ifmo.movies_app.repository.ImportOperationRepository;
 import ru.ifmo.movies_app.service.LocationService;
 import ru.ifmo.movies_app.service.MovieService;
+import ru.ifmo.movies_app.service.PaginationSupport;
 import ru.ifmo.movies_app.service.PersonService;
 
 @Service
@@ -92,7 +93,8 @@ public class MovieImportService {
             throw new ImportException(message, e);
         } catch (RuntimeException e) {
             String message = shortenMessage(e.getMessage());
-            log.warn("Movie import failed for user {}: {}", owner, message, e);
+            log.warn("Movie import failed for user {}: {}", owner, message);
+            log.debug("Movie import failure details for user {}", owner, e);
             operation.markFailed(message);
             importOperationRepository.save(operation);
             throw new ImportException(message, e);
@@ -119,8 +121,8 @@ public class MovieImportService {
     }
 
     public PageResponse<ImportOperationDto> getHistory(String username, boolean adminView, int page, int size) {
-        int boundedSize = normalizeSize(size);
-        int safePage = Math.max(page, 0);
+        int boundedSize = PaginationSupport.normalizeSize(size, 5, 50);
+        int safePage = PaginationSupport.normalizePage(page);
         int offset = safePage * boundedSize;
         List<ImportOperation> operations;
         long total;
@@ -263,11 +265,6 @@ public class MovieImportService {
                 importOperation.getCompletedAt(),
                 importOperation.getAddedCount(),
                 importOperation.getErrorMessage());
-    }
-
-    private int normalizeSize(int requestedSize) {
-        int value = requestedSize <= 0 ? 5 : requestedSize;
-        return Math.min(value, 50);
     }
 
     private String requireUsername(String username) {
