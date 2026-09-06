@@ -16,6 +16,8 @@ import ru.ifmo.movies_app.repository.MovieAnalyticsRepository;
 @Transactional(readOnly = true)
 public class MovieAnalyticsService {
 
+    private static final int MAX_NAME_SEARCH_LENGTH = 100;
+
     private final MovieAnalyticsRepository movieAnalyticsRepository;
     private final MovieService movieService;
 
@@ -30,7 +32,7 @@ public class MovieAnalyticsService {
     }
 
     public List<MovieTableRowDto> findMoviesWithNameContaining(String substring) {
-        return mapToRows(movieAnalyticsRepository.findMoviesWithNameContaining(substring));
+        return mapToRows(movieAnalyticsRepository.findMoviesWithNameContaining(normalizeSearchSubstring(substring)));
     }
 
     public List<MovieTableRowDto> findMoviesWithGenreGreater(MovieGenre genre) {
@@ -51,5 +53,16 @@ public class MovieAnalyticsService {
         return movies.stream()
                 .map(movieService::mapToRow)
                 .collect(Collectors.toList());
+    }
+
+    private String normalizeSearchSubstring(String substring) {
+        if (substring == null || substring.isBlank()) {
+            throw new IllegalArgumentException("Search substring must not be blank");
+        }
+        String normalized = substring.trim();
+        if (normalized.length() > MAX_NAME_SEARCH_LENGTH) {
+            throw new IllegalArgumentException("Search substring must be at most %d characters".formatted(MAX_NAME_SEARCH_LENGTH));
+        }
+        return normalized;
     }
 }   
