@@ -24,6 +24,12 @@ The project currently covers several layers:
 
 The Spring context test is marked with `@Testcontainers(disabledWithoutDocker = true)`, so it is skipped on machines without Docker and runs automatically when Docker is available.
 
+## Continuous Integration
+
+GitHub Actions runs `.github/workflows/ci.yml` on pushes and pull requests to `main`.
+
+The CI job uses Java 17, Maven dependency caching, and `./mvnw --batch-mode --no-transfer-progress verify`. When tests fail, Surefire reports are uploaded as a workflow artifact.
+
 ## Useful QA Scenarios Covered
 
 - Positive and negative service paths
@@ -31,6 +37,7 @@ The Spring context test is marked with `@Testcontainers(disabledWithoutDocker = 
 - API validation response shape
 - Structured `400` responses for malformed JSON and invalid query parameters
 - Analytics search guardrails for blank and overly long substrings
+- Analytics caching with normalized cache keys and mutation-driven cache eviction
 - Request correlation id generation, propagation, and MDC cleanup
 - Import rollback on failed movie creation
 - Import operation status transitions

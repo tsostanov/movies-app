@@ -2,6 +2,7 @@ package ru.ifmo.movies_app.service;
 
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -59,6 +60,13 @@ public class MovieService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = {
+            AnalyticsCacheNames.GENRE_COUNTS,
+            AnalyticsCacheNames.NAME_SEARCH,
+            AnalyticsCacheNames.GENRE_LISTS,
+            AnalyticsCacheNames.NO_OSCARS,
+            AnalyticsCacheNames.SCREENWRITERS_NO_OSCARS
+    }, allEntries = true)
     public MovieDetailsDto create(MovieFormDto dto) {
         uniquenessValidator.validate(dto, null);
         Movie movie = new Movie();
@@ -70,6 +78,13 @@ public class MovieService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = {
+            AnalyticsCacheNames.GENRE_COUNTS,
+            AnalyticsCacheNames.NAME_SEARCH,
+            AnalyticsCacheNames.GENRE_LISTS,
+            AnalyticsCacheNames.NO_OSCARS,
+            AnalyticsCacheNames.SCREENWRITERS_NO_OSCARS
+    }, allEntries = true)
     public MovieDetailsDto update(Long id, MovieFormDto dto) {
         Movie movie = movieRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new NotFoundException("Movie %d not found".formatted(id)));
@@ -82,6 +97,13 @@ public class MovieService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = {
+            AnalyticsCacheNames.GENRE_COUNTS,
+            AnalyticsCacheNames.NAME_SEARCH,
+            AnalyticsCacheNames.GENRE_LISTS,
+            AnalyticsCacheNames.NO_OSCARS,
+            AnalyticsCacheNames.SCREENWRITERS_NO_OSCARS
+    }, allEntries = true)
     public void delete(Long id) {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Movie %d not found".formatted(id)));
@@ -190,6 +212,13 @@ public class MovieService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = {
+            AnalyticsCacheNames.GENRE_COUNTS,
+            AnalyticsCacheNames.NAME_SEARCH,
+            AnalyticsCacheNames.GENRE_LISTS,
+            AnalyticsCacheNames.NO_OSCARS,
+            AnalyticsCacheNames.SCREENWRITERS_NO_OSCARS
+    }, allEntries = true)
     public void persistAndBroadcast(Movie movie) {
         uniquenessValidator.validate(movie);
         Movie saved = movieRepository.save(movie);
